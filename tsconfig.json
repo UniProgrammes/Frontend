@@ -34,5 +34,5 @@
     "composite": true
   },
   "include": ["src", "vite.config.ts", ".eslintrc.cjs", "tailwind.config.js", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "public"]
+  "exclude": ["node_modules", "public", "vite-env.d.ts"]
 }

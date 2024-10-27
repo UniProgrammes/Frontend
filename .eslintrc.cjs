@@ -73,7 +73,9 @@ const config = {
     "@typescript-eslint/no-redeclare": 2,
     "@typescript-eslint/no-unused-expressions": 2,
     "@typescript-eslint/no-empty-interface": 0,
-    "@typescript-eslint/no-shadow": 0
+    "@typescript-eslint/no-shadow": 0,
+    quotes: ["error", "double"],
+    "jsx-quotes": ["error", "prefer-double"]
   }
 };
 
