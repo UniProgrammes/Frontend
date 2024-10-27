@@ -1,0 +1,47 @@
+name: pr-check
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  pr-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Check for cache hit
+        id: yarn-cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Check cache status
+        run: echo "Cache hit?" ${{ steps.yarn-cache.outputs.cache-hit == 'true' }}
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Run linter
+        run: yarn lint --quiet
+
+      - name: Run tsc
+        run: yarn tsc --noEmit

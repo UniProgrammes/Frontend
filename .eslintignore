@@ -1,0 +1,9 @@
+vite.config.ts
+tailwind.config.js
+build
+dist
+node_modules
+.eslintrc.js
+postcss.config.js
+commitlint.config.js
+yarn.lock
