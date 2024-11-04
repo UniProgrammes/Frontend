@@ -15,12 +15,12 @@ function Dashboard() {
                     <h2 className="m-4 text-white">
                         MENU
                     </h2>
-                    <ul>
-                        <button className="block text-xl w-11/12 m-4 h-10 text-left p-2 rounded-lg text-white bg-purple-800">Dashboard</button>
-                        <button className="block text-xl w-11/12 m-4 h-10 text-left p-2 rounded-lg text-white bg-purple-600">Create Plan</button>
-                        <button className="block text-xl w-11/12 m-4 h-10 text-left p-2 rounded-lg text-white bg-purple-600">View Programme & Courses</button>
-                        <button className="block text-xl w-11/12 m-4 h-10 text-left p-2 rounded-lg text-white bg-purple-600">Profile</button>
-                        <button className="block text-xl w-11/12 m-4 h-10 text-left p-2 rounded-lg text-white bg-purple-600">Help</button>
+                    <ul className="flex flex-col">
+                        <button className="block text-xl w-11/12 m-4 h-auto text-left p-3 rounded-lg text-white bg-purple-800">Dashboard</button>
+                        <button className="block text-xl w-11/12 m-4 h-auto text-left p-3 rounded-lg text-white bg-purple-600">Create Plan</button>
+                        <button className="block text-xl w-11/12 m-4 h-auto text-left p-3 rounded-lg text-white bg-purple-600">View Programme & Courses</button>
+                        <button className="block text-xl w-11/12 m-4 h-auto text-left p-3 rounded-lg text-white bg-purple-600">Profile</button>
+                        <button className="block text-xl w-11/12 m-4 h-auto text-left p-3 rounded-lg text-white bg-purple-600">Help</button>
                     </ul>
                 </div>
                 <button className="absolute bottom-4 left-4 bg-neutral-800 text-white rounded-lg w-24 h-12">
