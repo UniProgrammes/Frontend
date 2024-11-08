@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import ReactFlow, {
     ReactFlowProvider,
     addEdge,
@@ -9,7 +9,9 @@ import ReactFlow, {
     EdgeChange,
     Connection,
     Edge,
-    Node
+    Node,
+    useNodesState,
+    useEdgesState
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -29,8 +31,8 @@ const initialEdges = [];
 
 
 function PlanTree() {
-    const [treeNodes, setTreeNodes] = useState<Node[]>(initialNodes);
-    const [treeEdges, setTreeEdges] = useState<Edge[]>(initialEdges);
+    const [treeNodes, setTreeNodes, onNodesChange] = useNodesState(initialNodes);
+    const [treeEdges, setTreeEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [courseList, setCourseList] = useState(initialCourseList); 
 
     const calculateDepth = (courseId, depthMap = {}) => {
@@ -64,48 +66,105 @@ function PlanTree() {
     
     const isCourseInTree = (courseId) => treeNodes.some((node) => node.id === courseId);
 
-    const addCourseToTree = (course) => {
-        if (isCourseInTree(course.id)) return;
+    const updatePrerequisiteStatus = useCallback(() => {
+        // First update all nodes
+        setTreeNodes((currentNodes) => 
+            currentNodes.map((node) => {
+                const course = courseList.find((c) => c.id === node.id);
+                if (!course) return node;
 
-        const depthCount = {}; 
-        treeNodes.forEach((node) => {
-            const nodeDepth = calculateDepth(node.id);
-            depthCount[nodeDepth] = (depthCount[nodeDepth] || 0) + 1;
+                const hasMissingPrerequisites = course.prerequisites.some(
+                    (prereqId) => !currentNodes.some((n) => n.id === prereqId)
+                );
+
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        label: course.name,
+                        hasMissingPrerequisites,
+                    },
+                    style: hasMissingPrerequisites 
+                        ? { backgroundColor: 'red', color: 'white' } 
+                        : { backgroundColor: '#fff', color: '#000' },
+                };
+            })
+        );
+
+        // Then rebuild all edges
+        setTreeEdges(() => {
+            const newEdges = [];
+                
+            // Loop through all nodes in the tree
+            treeNodes.forEach((node) => {
+                const course = courseList.find((c) => c.id === node.id);
+                if (course) {
+                    // Add edges for each prerequisite that exists in the tree
+                    course.prerequisites.forEach((prereqId) => {
+                        if (treeNodes.some(n => n.id === prereqId)) {
+                            newEdges.push({
+                                id: `e${prereqId}-${course.id}`,
+                                source: prereqId,
+                                target: course.id,
+                                animated: true,
+                                type: 'smoothstep',
+                            });
+                        }
+                    });
+                }
+            });
+
+            return newEdges;
         });
+    }, [courseList, treeNodes]);
 
-        const newPosition = calculatePosition(course, depthCount);
-        
-        const hasMissingPrerequisites = course.prerequisites.some((prereqId) => !isCourseInTree(prereqId));
+    // Add this new effect to handle edge updates
+    useEffect(() => {
+        updatePrerequisiteStatus();
+    }, [treeNodes, updatePrerequisiteStatus]);
 
-        const newNode = {
-            id: course.id,
-            data: { 
-                label: course.name, 
-                hasMissingPrerequisites, 
-            },
-            position: newPosition,
-            style: hasMissingPrerequisites ? { backgroundColor: 'red', color: 'white' } : {},
-        };
-
-        const newEdges = course.prerequisites
-            .filter((prereqId) => isCourseInTree(prereqId))
-            .map((prereqId) => ({
-                id: `e${prereqId}-${course.id}`,
-                source: prereqId,
-                target: course.id,
-                animated: true,
-            }));
-
-        setTreeNodes((nodes) => nodes.concat(newNode));
-        setTreeEdges((edges) => edges.concat(newEdges));
-    };
-    
-    
-
-    const removeCourseFromTree = (courseId) => {
+    const removeCourseFromTree = useCallback((courseId) => {
         setTreeNodes((nodes) => nodes.filter((node) => node.id !== courseId));
-        setTreeEdges((edges) => edges.filter((edge) => edge.source !== courseId && edge.target !== courseId));
-    };
+    }, []);
+
+    const onDragOver = useCallback((event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
+
+    const onDrop = useCallback((event) => {
+        event.preventDefault();
+        const courseId = event.dataTransfer.getData('application/courseId');
+        const course = courseList.find((c) => c.id === courseId);
+        
+        if (course) {
+            // Get the drop position relative to the ReactFlow container
+            const reactFlowBounds = event.currentTarget.getBoundingClientRect();
+            const position = {
+                x: event.clientX - reactFlowBounds.left,
+                y: event.clientY - reactFlowBounds.top
+            };
+
+            const hasMissingPrerequisites = course.prerequisites.some(
+                (prereqId) => !isCourseInTree(prereqId)
+            );
+
+            const newNode = {
+                id: course.id,
+                data: { 
+                    label: course.name, 
+                    hasMissingPrerequisites, 
+                },
+                position: position,
+                style: hasMissingPrerequisites 
+                    ? { backgroundColor: 'red', color: 'white' } 
+                    : { backgroundColor: '#fff', color: '#000' },
+                draggable: true,
+            };
+
+            setTreeNodes((nodes) => [...nodes, newNode]);
+        }
+    }, [courseList, isCourseInTree]);
 
     return (
         <div className="flex flex-row max-h-full max-w-full">
@@ -130,14 +189,18 @@ function PlanTree() {
                 </header>
                 <main id="plan-tree" className="bg-neutral-300 rounded-3xl p-4 m-8">
                 <div style={{ display: 'flex', height: '100vh' }}>
-                    <div style={{ flex: 1, borderRight: '1px solid #ccc', padding: '10px' }}>
+                    <div style={{ flex: 3, borderRight: '1px solid #ccc', padding: '10px' }}>
                         <h3>Programme Tree</h3>
                         <ReactFlowProvider>
                             <ReactFlow
                                 nodes={treeNodes}
                                 edges={treeEdges}
                                 fitView
+                                onNodesChange={onNodesChange}
+                                onEdgesChange={onEdgesChange}
                                 onNodeClick={(_, node) => removeCourseFromTree(node.id)}
+                                onDragOver={onDragOver}
+                                onDrop={onDrop}
                             >
                                 <MiniMap />
                                 <Controls />
@@ -151,20 +214,24 @@ function PlanTree() {
                         <ul>
                             {courseList.map((course) => (
                                 <li key={course.id} style={{ marginBottom: '8px' }}>
-                                    <button
-                                        onClick={() => addCourseToTree(course)}
+                                    <div
+                                        draggable
+                                        onDragStart={(e) => {
+                                            e.dataTransfer.setData('application/courseId', course.id);
+                                            e.dataTransfer.effectAllowed = 'move';
+                                        }}
                                         style={{
                                             padding: '6px 12px',
                                             backgroundColor: isCourseInTree(course.id) ? '#ddd' : '#4CAF50',
                                             color: isCourseInTree(course.id) ? '#666' : 'white',
-                                            cursor: isCourseInTree(course.id) ? 'not-allowed' : 'pointer',
+                                            cursor: isCourseInTree(course.id) ? 'not-allowed' : 'grab',
                                             border: 'none',
                                             borderRadius: '4px',
+                                            userSelect: 'none',
                                         }}
-                                        disabled={isCourseInTree(course.id)}
                                     >
                                         {course.name} {isCourseInTree(course.id) && '(In Tree)'}
-                                    </button>
+                                    </div>
                                 </li>
                             ))}
                         </ul>
