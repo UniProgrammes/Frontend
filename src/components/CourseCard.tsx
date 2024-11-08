@@ -1,7 +1,7 @@
 import React from "react";
 
 interface CourseCardProps {
-    name: string,
+    name: string;
     ects: string;
     year: string;
     code: string;
@@ -20,10 +20,9 @@ interface CourseCardProps {
             <p className="m-2 pl-4"> {code}</p>       
             <button className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center text-lg font-bold">🗑️</button> 
         </div>
-        
-
     </div>
   )
 }
+
 
 export default CourseCard;
