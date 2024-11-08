@@ -14,7 +14,11 @@ interface StudyPlanCardProps {
       <p className="m-2 mt-8">{completed ? "" : "Not"} Completed</p>
       <p className="m-2"> {numCourses} courses selected</p>
       <p className="m-2 mb-8">Last Updated on: {lastUpdate}</p>
-      <button className="px-4 py-2 bg-purple-500 hover:bg-purple-700 text-white rounded-full text-center w-full">{completed ? "View" : "Modify"} Study Plan</button>
+      <a href="http://localhost:3000/study-plan">
+        <button className="px-4 py-2 bg-purple-500 hover:bg-purple-700 text-white rounded-full text-center w-full">
+          {completed ? "View" : "Modify"} Study Plan
+        </button>
+      </a>
     </div>
   )
 }
