@@ -6,6 +6,7 @@ interface CourseCardProps {
   code: string;
   educational_level: string;
   description: string;
+  onRemove: () => void;
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ 
@@ -13,7 +14,8 @@ const CourseCard: React.FC<CourseCardProps> = ({
   credits, 
   code,
   educational_level,
-  description 
+  description,
+  onRemove
 }) => {
   return (
     <div className="bg-white shadow-md rounded-3xl p-4 w-full">
@@ -28,7 +30,10 @@ const CourseCard: React.FC<CourseCardProps> = ({
         <p className="m-2 pl-4">{description}</p>
         <div id="current-plan" className="flex flex-row items-center justify-between px-4 py-2">
             <p className="m-2 pl-4">{code}</p>       
-            <button className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center text-lg font-bold">
+            <button 
+                onClick={onRemove}
+                className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center text-lg font-bold hover:bg-red-700"
+            >
                 🗑️
             </button> 
         </div>

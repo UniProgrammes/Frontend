@@ -95,6 +95,12 @@ function CreatePlan() {
         }
     };
 
+    const handleRemoveCourse = (courseCode: string) => {
+        setSelectedCourses(prevCourses => 
+            prevCourses.filter(course => course.code !== courseCode)
+        );
+    };
+
     const renderProgrammeSelect = () => (
         <div id="choose-program" className="flex items-center justify-between bg-[#C3AAEA] rounded-xl h-16 p-2 m-8">
             <h1 className="text-2xl text-black">
@@ -159,6 +165,7 @@ function CreatePlan() {
                         code={course.code}
                         educational_level={course.educational_level}
                         description={course.description}
+                        onRemove={() => handleRemoveCourse(course.code)}
                     />
                 ))
             ) : (
