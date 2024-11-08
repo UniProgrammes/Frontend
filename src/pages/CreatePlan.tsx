@@ -1,5 +1,6 @@
 import React from "react";
 import CourseCard from "~/components/CourseCard";
+import SideBar from "~/components/SideBar";
 
 
 // Acces this page, change the url to .../createplan
@@ -11,26 +12,7 @@ function CreatePlan() {
 
     return(
         <div className="flex flex-row max-h-full max-w-full">
-            <nav id="side-bar" className="bg-purple-500 w-1/5">
-                <h1 className="p-8 pl-4 text-3xl text-white font-bold justify-center">
-                    UniProgrammes
-                </h1>
-                <div>
-                    <h2 className="m-4 text-white">
-                        MENU
-                    </h2>
-                    <ul>
-                        <button className="block text-xl w-11/12 m-4 h-10 text-left p-2 rounded-lg text-white bg-purple-600">Dashboard</button>
-                        <button className="block text-xl w-11/12 m-4 h-10 text-left p-2 rounded-lg text-white bg-purple-800">Create Plan</button>
-                        <button className="block text-xl w-11/12 m-4 h-auto text-left p-2 rounded-lg text-white bg-purple-600">View Programme & Courses</button>
-                        <button className="block text-xl w-11/12 m-4 h-10 text-left p-2 rounded-lg text-white bg-purple-600">Profile</button>
-                        <button className="block text-xl w-11/12 m-4 h-10 text-left p-2 rounded-lg text-white bg-purple-600">Help</button>
-                    </ul>
-                </div>
-                <button className="absolute bottom-4 left-4 bg-neutral-800 text-white rounded-lg w-24 h-12">
-                    EN
-                </button>
-            </nav>
+            <SideBar />
             <div id="main-content" className="w-full flex flex-col">
                 <header id="top-buttons" className="m-8 flex items-center justify-between">
                     <button id="user-identifier" className="bg-neutral-300 w-auto h-auto rounded-2xl text-2xl p-4">
