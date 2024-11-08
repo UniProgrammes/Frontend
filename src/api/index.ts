@@ -22,6 +22,38 @@ interface LoginResponse {
   refresh: string;
 }
 
+// Types for programmes and courses
+interface Programme {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  degree_type: string;
+  credits: string;
+  courses: string[];
+}
+
+interface ProgrammeResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Programme[];
+}
+
+interface Course {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  code: string;
+  credits: string;
+  educational_level: string;
+  description: string;
+  main_area: string;
+  learning_outcomes: string[];
+  prerequisites: string[];
+}
+
 // Create axios instance
 export const client = axios.create({
   baseURL: API_URL,
@@ -74,4 +106,24 @@ export const initializeAuth = async () => {
       console.error('Auth initialization failed:', registerError);
     }
   }
+};
+
+// API functions
+export const getAllProgrammes = async () => {
+  const response = await client.get<ProgrammeResponse>('/v1/programmes/');
+  return response.data.results;
+};
+
+// Update the Course response interface
+interface CourseResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Course[];
+}
+
+// Update the getAllCourses function
+export const getAllCourses = async () => {
+  const response = await client.get<CourseResponse>('/v1/courses/');
+  return response.data.results; // Return the results array instead of response.data
 };
