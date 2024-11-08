@@ -12,7 +12,6 @@ import ReactFlow, {
     Node
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import SideBar from '~/components/SideBar';
 
 // Testing set for the courses awaiting for the link to the backend
 const initialCourseList = [
@@ -110,7 +109,6 @@ function PlanTree() {
 
     return (
         <div className="flex flex-row max-h-full max-w-full">
-            <SideBar />
             <div id="main-content" className="w-full flex flex-col">
                 <header id="top-buttons" className="m-8 flex items-center justify-between">
                     <button id="user-identifier" className="bg-neutral-300 rounded-2xl text-2xl p-4">User</button>
