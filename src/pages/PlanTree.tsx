@@ -16,6 +16,12 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 
 // Testing set for the courses awaiting for the link to the backend
+
+const initialProgramList = [
+    { id: '1', name: 'Computer Science' },
+    { id: '2', name: 'Data Science' },
+];
+
 const initialCourseList = [
     { id: '2', name: 'Data Structures', prerequisites: ['1'] },
     { id: '3', name: 'Algorithms', prerequisites: ['1'] },
@@ -34,6 +40,7 @@ function PlanTree() {
     const [treeNodes, setTreeNodes, onNodesChange] = useNodesState(initialNodes);
     const [treeEdges, setTreeEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [courseList, setCourseList] = useState(initialCourseList); 
+    const [selectedProgramme, setSelectedProgramme] = useState(null);
 
     const calculateDepth = (courseId, depthMap = {}) => {
         if (depthMap[courseId] !== undefined) return depthMap[courseId];
@@ -165,6 +172,10 @@ function PlanTree() {
             setTreeNodes((nodes) => [...nodes, newNode]);
         }
     }, [courseList, isCourseInTree]);
+
+    const filteredCourses = selectedProgramme
+        ? courseList.filter((course) => course.id == selectedProgramme)
+        : courseList;
 
     return (
         <div className="flex flex-row max-h-full max-w-full">

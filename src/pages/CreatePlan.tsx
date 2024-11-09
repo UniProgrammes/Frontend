@@ -40,10 +40,7 @@ function CreatePlan() {
             setLoading(true);
             setError(null);
             try {
-                const [programmesData, coursesData] = await Promise.all([
-                    getAllProgrammes(),
-                    getAllCourses()
-                ]);
+                const programmesData = await getAllProgrammes();
 
                 if (!programmesData || programmesData.length === 0) {
                     setError('No programmes available');
@@ -52,15 +49,9 @@ function CreatePlan() {
                     setProgrammes(programmesData);
                 }
 
-                if (!coursesData || coursesData.length === 0) {
-                    setError(prev => prev ? `${prev}, No courses available` : 'No courses available');
-                    setCourses([]);
-                } else {
-                    setCourses(coursesData);
-                }
             } catch (error) {
                 setError('Failed to fetch data. Please try again later.');
-                console.error('Error fetching data:', error);
+                console.error('Error fetching prgrammes:', error);
             } finally {
                 setLoading(false);
             }
@@ -70,18 +61,30 @@ function CreatePlan() {
     }, []);
 
     useEffect(() => {
-        if (selectedProgramme && courses.length > 0) {
-            const programme = programmes.find(p => p.id === selectedProgramme);
-            if (programme) {
-                const programCourses = courses.filter(course => 
-                    programme.courses.includes(course.id.toString())
-                );
+        const fetchProgrammeStructure = async () => {
+            if(!selectedProgramme) return;
+
+            setLoading(true);
+            setError(null);
+            try{
+                const response = await fetch(`/api/programmes/${selectedProgramme}/structure/`);
+                if(!response.ok){
+                    throw new Error('Error fetching programme structure');
+                }
+                const data = await response.json();
+
+                const programCourses = data.courses || [];
                 setFilteredCourses(programCourses);
+            } catch (error) {
+                setError('Failed to fetch programme structure. Please try again later.');
+                console.error('Error fetching programme structure:', error);
+            } finally {
+                setLoading(false);
             }
-        } else {
-            setFilteredCourses([]);
-        }
-    }, [selectedProgramme, courses, programmes]);
+        };
+
+        fetchProgrammeStructure();
+    }, [selectedProgramme]);
 
     const handleProgramTreeClick = () => {
         window.location.href = '/plantree';
