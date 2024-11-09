@@ -1,30 +1,45 @@
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 
-  const SideBar: React.FC = () => {
+const SideBar: React.FC = () => {
+  const location = useLocation();
+
+  const menuItems = [
+    { path: "/dashboard", label: "Dashboard" },
+    { path: "/createplan", label: "Create Plan" },
+    { path: "/study-plan", label: "View Programme & Courses" },
+    { path: "/profile", label: "Profile" },
+    { path: "/help", label: "Help" },
+  ];
+
   return (
-    <div className="w-auto">
-      <nav id="side-bar" className="bg-purple-500 w-auto h-screen">
-        <h1 className="p-8 pl-4 text-4xl text-white font-bold justify-center">
-            UniProgrammes
+    <div className="w-64">
+      <nav id="side-bar" className="bg-purple-500 h-screen flex flex-col">
+        <h1 className="p-4 text-2xl text-white font-bold">
+          UniProgrammes
         </h1>
-        <div>
-            <h2 className="m-4 text-white">
-                MENU
-            </h2>
-            <ul className="flex flex-col">
-                <button className="block text-xl w-11/12 m-4 h-auto text-left p-3 rounded-lg text-white bg-purple-800">Dashboard</button>
-                <button className="block text-xl w-11/12 m-4 h-auto text-left p-3 rounded-lg text-white bg-purple-600">Create Plan</button>
-                <button className="block text-xl w-11/12 m-4 h-auto text-left p-3 rounded-lg text-white bg-purple-600">View Programme & Courses</button>
-                <button className="block text-xl w-11/12 m-4 h-auto text-left p-3 rounded-lg text-white bg-purple-600">Profile</button>
-                <button className="block text-xl w-11/12 m-4 h-auto text-left p-3 rounded-lg text-white bg-purple-600">Help</button>
-            </ul>
+        <div className="flex-1 mt-6">
+          <h2 className="px-4 py-2 text-sm font-light text-white">MENU</h2>
+          <ul className="flex flex-col gap-4 px-2">
+            {menuItems.map((item) => (
+              <Link 
+                to={item.path} 
+                key={item.path}
+                className={`block text-sm w-full px-3 py-2 rounded-lg text-white ${
+                  location.pathname === item.path ? "bg-purple-800" : "bg-purple-600 hover:bg-purple-700"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </ul>
         </div>
-        <button className="absolute bottom-4 left-4 bg-neutral-800 text-white rounded-lg w-24 h-12">
-            EN
+        <button className="m-4 bg-neutral-800 text-white rounded-lg w-12 h-8 text-sm">
+          EN
         </button>
-    </nav>
+      </nav>
     </div>
-  )
-}
+  );
+};
 
 export default SideBar;
