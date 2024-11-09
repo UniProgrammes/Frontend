@@ -1,4 +1,6 @@
 import React, { useEffect } from "react";
+import { BrowserRouter } from 'react-router-dom';
+import SideBar from './components/SideBar';
 import Router from "~/router";
 import { initializeAuth } from './api';
 

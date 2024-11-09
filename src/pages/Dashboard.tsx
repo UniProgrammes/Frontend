@@ -1,6 +1,4 @@
 import React from "react";
-
-import SideBar from "~/components/SideBar";
 import StudyPlanCard from "~/components/StudyPlanCard";
 
 // Acces this page, change the url to .../dashboard
@@ -8,7 +6,6 @@ import StudyPlanCard from "~/components/StudyPlanCard";
 function Dashboard() {
     return(
         <div className="flex flex-row max-h-full max-w-full">
-            <SideBar />
             <div id="main-content" className="w-full flex flex-col">
                 <header id="top-buttons" className="m-8 flex items-center justify-between">
                     <button id="user-identifier" className="bg-neutral-300 w-auto h-auto rounded-2xl text-2xl p-4">
