@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import CourseCard from "~/components/CourseCard";
-import { getAllProgrammes, getAllCourses } from "~/api";
+import { getAllProgrammes, getAllCourses, getProgrammeStructure } from "~/api";
+
+
 
 interface Programme {
   id: string;
@@ -62,17 +64,12 @@ function CreatePlan() {
 
     useEffect(() => {
         const fetchProgrammeStructure = async () => {
-            if(!selectedProgramme) return;
-
+            if (!selectedProgramme) return;
+    
             setLoading(true);
             setError(null);
-            try{
-                const response = await fetch(`/api/programmes/${selectedProgramme}/structure/`);
-                if(!response.ok){
-                    throw new Error('Error fetching programme structure');
-                }
-                const data = await response.json();
-
+            try {
+                const data = await getProgrammeStructure(selectedProgramme);
                 const programCourses = data.courses || [];
                 setFilteredCourses(programCourses);
             } catch (error) {
@@ -82,17 +79,17 @@ function CreatePlan() {
                 setLoading(false);
             }
         };
-
+    
         fetchProgrammeStructure();
     }, [selectedProgramme]);
-
+    
     const handleProgramTreeClick = () => {
         window.location.href = '/plantree';
     };
 
     const handleCourseSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const courseId = event.target.value;
-        const selectedCourse = courses.find(course => course.id === courseId);
+        const selectedCourse = filteredCourses.find(course => course.id === courseId);
         if (selectedCourse && !selectedCourses.some(course => course.id === courseId)) {
             setSelectedCourses([...selectedCourses, selectedCourse]);
         }

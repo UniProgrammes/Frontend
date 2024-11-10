@@ -110,8 +110,13 @@ export const initializeAuth = async () => {
 
 // API functions
 export const getAllProgrammes = async () => {
-  const response = await client.get<ProgrammeResponse>('/v1/programmes/');
-  return response.data.results;
+  try {
+    const response = await client.get<ProgrammeResponse>('/v1/programmes/');
+    return response.data.results;
+  } catch (error) {
+    console.error('Error fetching programmes:', error);
+    return []; 
+  }
 };
 
 // Update the Course response interface
@@ -126,4 +131,19 @@ interface CourseResponse {
 export const getAllCourses = async () => {
   const response = await client.get<CourseResponse>('/v1/courses/');
   return response.data.results; // Return the results array instead of response.data
+};
+
+export const getProgrammeStructure = async (programmeId: string) => {
+  const response = await client.get(`/v1/programmes/${programmeId}/structure`);
+  return response.data; 
+};
+
+export const getProgrammeById = async (programmeId: string) => {
+  const response = await client.get<Programme>(`/v1/programmes/${programmeId}/`);
+  return response.data;
+};
+
+export const getCourseById = async (courseId: string) => {
+  const response = await client.get<Course>(`/v1/courses/${courseId}/`);
+  return response.data;
 };
