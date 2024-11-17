@@ -7,7 +7,7 @@ const SideBar: React.FC = () => {
   const menuItems = [
     { path: "/dashboard", label: "Dashboard" },
     { path: "/createplan", label: "Create Plan" },
-    { path: "/study-plan", label: "View Programme & Courses" },
+    { path: "/view-programme", label: "View Programme & Courses" },
     { path: "/profile", label: "Profile" },
     { path: "/help", label: "Help" },
   ];
