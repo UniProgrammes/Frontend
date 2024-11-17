@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 
-import { client, getAllStudyPlans, StudyPlan, StudyPlanResponse } from "~/api";
+import { client, getAllStudyPlans, StudyPlan, StudyPlanGetResponse } from "~/api";
 import StudyPlanCard from "~/components/StudyPlanCard";
 
 
 function Dashboard() {
     
-    const [studyPlans, setStudyPlans] = useState([]);
+    const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([]);
 
     useEffect(() => {
         async function getStidyPlans() {
-            const response = await client.get<StudyPlanResponse>("/v1/study-plans");
+            const response = await client.get<StudyPlanGetResponse>("/v1/study-plans");
             setStudyPlans(response.data.results);
             console.log(studyPlans);
         }
@@ -38,10 +38,21 @@ function Dashboard() {
                             <h3 className="h-full align-middle text-2xl">Sort By</h3>
                         </div>
                     </div>
-                    <div id="study-plan" className="flex space-x-8 p-4">
-                        <StudyPlanCard name="Study Plan 1" completed="" numCourses="5" lastUpdate="2024-03-02"/>
-                        <StudyPlanCard name="Study Plan 2" completed="" numCourses="5" lastUpdate="2024-03-02"/>
-                    </div>
+                    {studyPlans.length > 0 ? (
+                        <div  id="study-plan" className="flex space-x-8 p-4">
+                            {studyPlans.map((studyPlan) => (
+                                <StudyPlanCard
+                                    id={studyPlan.id}
+                                    name={studyPlan.name}
+                                    completed={studyPlan.status === "draft"}
+                                    numCourses={studyPlan.courses.length}
+                                    lastUpdate={studyPlan.updated_at.slice(0, 10)}
+                                    />
+                            ))}
+                        </div>
+                    ) : (
+                        <p>You don't have any study plan</p>
+                    )}
                 </main>
             </div>
         </div>
