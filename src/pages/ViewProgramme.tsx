@@ -18,9 +18,31 @@ interface ProgrammeResponse {
     results: Programme[];
 }
 
+interface Course {
+    id: string;
+    created_at: string;
+    updated_at: string;
+    name: string;
+    code: string;
+    credits: string;
+    educational_level: string;
+    description: string;
+    main_area: string;
+    learning_outcomes: string[];
+    prerequisites: string[];
+}
+
+interface CourseResponse {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: Course[];
+}
+
 function ViewProgramme() {
     const [searchTerm, setSearchTerm] = useState("");
     const [programmes, setProgrammes] = useState<Programme[]>([]);
+    const [courses, setCourses] = useState<Course[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
@@ -33,11 +55,17 @@ function ViewProgramme() {
         setHasSearched(true);
 
         try {
-            const response = await client.get<ProgrammeResponse>(`/v1/programmes/?name=${encodeURIComponent(searchTerm)}`);
-            setProgrammes(response.data.results);
+            const [programmeResponse, courseResponse] = await Promise.all([
+                client.get<ProgrammeResponse>(`/v1/programmes/?name=${encodeURIComponent(searchTerm)}`),
+                client.get<CourseResponse>(`/v1/courses/?name=${encodeURIComponent(searchTerm)}`)
+            ]);
+            
+            setProgrammes(programmeResponse.data.results);
+            setCourses(courseResponse.data.results);
         } catch (err) {
-            setError("Failed to fetch programmes. Please try again.");
+            setError("Failed to fetch results. Please try again.");
             setProgrammes([]);
+            setCourses([]);
         } finally {
             setIsLoading(false);
         }
@@ -53,22 +81,40 @@ function ViewProgramme() {
         }
 
         if (!hasSearched) {
-            return <span className="text-lg text-neutral-500">Execute a search to view programmes and courses.</span>;
+            return <span className="text-lg text-neutral-500">Start typing to search for programmes and courses...</span>;
         }
 
-        if (programmes.length === 0) {
-            return <div className="text-lg text-neutral-500">No programmes found matching your search.</div>;
+        if (programmes.length === 0 && courses.length === 0) {
+            return <div className="text-lg text-neutral-500">No results found matching your search.</div>;
         }
 
         return (
             <div className="space-y-4 w-full">
                 {programmes.map((programme) => (
-                    <div key={programme.id} className="bg-white rounded-lg p-4 shadow-md">
-                        <h2 className="text-xl font-semibold text-purple-700">{programme.name}</h2>
+                    <div key={programme.id} className="bg-white rounded-lg p-4 shadow-md relative">
+                        <div className="absolute top-4 right-4 bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm">
+                            Programme
+                        </div>
+                        <h2 className="text-xl font-semibold text-purple-700 pr-24">{programme.name}</h2>
                         <div className="mt-2 text-neutral-600">
                             <p>Degree Type: {programme.degree_type}</p>
                             <p>Credits: {programme.credits}</p>
                             <p>Courses: {programme.courses.length}</p>
+                        </div>
+                    </div>
+                ))}
+                
+                {courses.map((course) => (
+                    <div key={course.id} className="bg-white rounded-lg p-4 shadow-md relative">
+                        <div className="absolute top-4 right-4 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
+                            Course
+                        </div>
+                        <h2 className="text-xl font-semibold text-purple-700 pr-24">{course.name}</h2>
+                        <div className="mt-2 text-neutral-600">
+                            <p>Code: {course.code}</p>
+                            <p>Credits: {course.credits}</p>
+                            <p>Level: {course.educational_level}</p>
+                            <p className="text-sm mt-2 text-neutral-500">{course.description}</p>
                         </div>
                     </div>
                 ))}
