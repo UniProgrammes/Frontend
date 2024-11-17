@@ -6,6 +6,7 @@ import Home from "~/pages/Home";
 import PlanTree from "~/pages/PlanTree";
 import StudyPlanView from "~/pages/StudyPlanView";
 import { RouterItem } from "~/types/router";
+import Profile from "~/pages/Profile";
 
 const routes: RouterItem[] = [
   {
@@ -32,6 +33,11 @@ const routes: RouterItem[] = [
     title: "Study Plan",
     path: "/study-plan",
     component: <StudyPlanView />,
+  },
+  {
+    title: "Profile", 
+    path: "/profile", 
+    component: <Profile />,
   },
 ];
 
