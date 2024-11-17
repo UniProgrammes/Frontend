@@ -33,7 +33,7 @@ function Profile() {
                                 alt="Profile"
                             />
                             <button
-                                className="absolute bottom-0 right-9 bg-purple-600 text-white rounded-full p-2"
+                                className="absolute bottom-0 right-11 bg-purple-600 text-white rounded-full p-2"
                                 onClick={() => document.getElementById("file-input")?.click()}
                             >
                                 Change photo
