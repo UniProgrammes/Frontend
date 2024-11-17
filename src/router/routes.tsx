@@ -1,10 +1,9 @@
 import React from "react";
-import CreatePlan from "~/pages/CreatePlan";
 
+import CreatePlan from "~/pages/CreatePlan";
 import Dashboard from "~/pages/Dashboard";
 import Home from "~/pages/Home";
 import PlanTree from "~/pages/PlanTree";
-import TestBackendConnection from "~/pages/TestBackendConnection";
 import StudyPlanView from "~/pages/StudyPlanView";
 import { RouterItem } from "~/types/router";
 
