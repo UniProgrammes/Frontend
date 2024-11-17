@@ -1,8 +1,9 @@
 
 import React, { useState, useCallback, useEffect } from "react";
+
+import { MagicWandIcon } from "@radix-ui/react-icons"
 import { ReactFlow, ReactFlowProvider, useNodesState, useEdgesState, Controls, ControlButton, MiniMap, Background } from "@xyflow/react";
 import "@xyflow/react/dist/style.css"
-import { MagicWandIcon } from "@radix-ui/react-icons"
 import ELK from "elkjs/lib/elk.bundled.js";
 
 const elk = new ELK();

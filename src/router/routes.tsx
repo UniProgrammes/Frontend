@@ -4,9 +4,9 @@ import CreatePlan from "~/pages/CreatePlan";
 import Dashboard from "~/pages/Dashboard";
 import Home from "~/pages/Home";
 import PlanTree from "~/pages/PlanTree";
+import Profile from "~/pages/Profile";
 import StudyPlanView from "~/pages/StudyPlanView";
 import { RouterItem } from "~/types/router";
-import Profile from "~/pages/Profile";
 
 const routes: RouterItem[] = [
   {
