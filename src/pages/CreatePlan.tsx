@@ -102,6 +102,10 @@ function CreatePlan() {
         );
     };
 
+    const handleCreateStudyPlan = () => {
+        
+    }
+
     const renderProgrammeSelect = () => (
         <div id="choose-program" className="flex items-center justify-between bg-[#C3AAEA] rounded-xl h-16 p-2 m-8">
             <h1 className="text-2xl text-black">
