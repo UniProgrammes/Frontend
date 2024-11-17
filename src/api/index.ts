@@ -56,17 +56,19 @@ interface Course {
 
 export interface StudyPlan {
   id: string,
+  created_at: string,
+  updated_at: string,
   name: string,
   status: string,
-  created_at: string,
-  updated_at: string
+  user: number,
+  courses: Course[]
 }
 
-export interface StudyPlanResponse {
+export interface StudyPlanGetResponse {
   count: number,
   next: string | null,
   previous: string | null,
-  results: []
+  results: StudyPlan[];
 }
 
 // Create axios instance
@@ -144,6 +146,11 @@ export const getAllCourses = async () => {
 };
 
 export const getAllStudyPlans = async () => {
-  const response = await client.get<StudyPlanResponse>("/v1/users/me/study-plans");
+  const response = await client.get<StudyPlanGetResponse>("/v1/study-plans");
   return response.data.results;
-}
+};
+
+export const saveStudyPlan = async (studyPlan: {name: string}) => {
+  const response = await client.post<StudyPlan>("/v1/study-plans", studyPlan);
+  return response.data;
+};
