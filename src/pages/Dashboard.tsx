@@ -1,9 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+
+import { client, getAllStudyPlans, StudyPlan, StudyPlanResponse } from "~/api";
 import StudyPlanCard from "~/components/StudyPlanCard";
 
-// Acces this page, change the url to .../dashboard
 
 function Dashboard() {
+    
+    const [studyPlans, setStudyPlans] = useState([]);
+
+    useEffect(() => {
+        async function getStidyPlans() {
+            const response = await client.get<StudyPlanResponse>("/v1/study-plans");
+            setStudyPlans(response.data.results);
+            console.log(studyPlans);
+        }
+
+        getStidyPlans();
+    }, [])
+
     return(
         <div className="flex flex-row max-h-full max-w-full">
             <div id="main-content" className="w-full flex flex-col">
