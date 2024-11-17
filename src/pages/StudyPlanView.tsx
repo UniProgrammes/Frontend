@@ -1,7 +1,5 @@
 import React from "react";
 
-// Acces this page, change the url to .../dashboard
-
 function StudyPlanView() {
     return(
         <div className="flex flex-row max-h-full max-w-full">
