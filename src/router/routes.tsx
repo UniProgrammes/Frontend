@@ -3,6 +3,7 @@ import CreatePlan from "~/pages/CreatePlan";
 
 import Dashboard from "~/pages/Dashboard";
 import Home from "~/pages/Home";
+import ViewProgramme from "~/pages/ViewProgramme";
 import PlanTree from "~/pages/PlanTree";
 import TestBackendConnection from "~/pages/TestBackendConnection";
 import StudyPlanView from "~/pages/StudyPlanView";
@@ -39,6 +40,11 @@ const routes: RouterItem[] = [
     title: "Profile", 
     path: "/profile", 
     component: <Profile />,
+  },
+  {
+    title: "View Programme & Courses", 
+    path: "/view-programme", 
+    component: <ViewProgramme />,
   },
 ];
 
