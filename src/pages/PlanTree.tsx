@@ -17,7 +17,7 @@ const initialCourseList = [
     { id: "6", name: "Databases 2", prerequisites: ["4"], year: 3 },
     { id: "9", name: "Distributed Systems", prerequisites: ["5"], year: 3 },
     { id: "10", name: "Coding", prerequisites: ["1"], year: 1 },
-    { id: "8", name: "Parallel Programming", prerequisites: ["5", "10"], year: 3 }
+    { id: "8", name: "Parallel Programming", prerequisites: ["10"], year: 3 }
 ];
 
 const initialNodes = [
