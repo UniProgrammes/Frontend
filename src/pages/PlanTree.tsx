@@ -9,15 +9,15 @@ const elk = new ELK();
 
 // Testing set for the courses awaiting for the link to the backend
 const initialCourseList = [
-    { id: "2", name: "Data Structures", prerequisites: ["1"] },
-    { id: "3", name: "Algorithms", prerequisites: ["1"] },
-    { id: "4", name: "Databases", prerequisites: ["2"] },
-    { id: "5", name: "Operating Systems", prerequisites: ["2"] },
-    { id: "6", name: "Databases 2", prerequisites: ["4"] },
-    { id: "7", name: "Operating Systems 2", prerequisites: ["3"] },
-    { id: "9", name: "Distributed Systems", prerequisites: ["5"] },
-    { id: "10", name: "Coding", prerequisites: ["1"] },
-    { id: "8", name: "Parallel Programming", prerequisites: ["5", "10"] }
+    { id: "2", name: "Data Structures", prerequisites: ["1"], year : 1 },
+    { id: "3", name: "Algorithms", prerequisites: ["1"], year : 1 },
+    { id: "4", name: "Databases", prerequisites: ["2"], year : 2 },
+    { id: "5", name: "Operating Systems", prerequisites: ["2"], year : 2},
+    { id: "7", name: "Operating Systems 2", prerequisites: ["5"], year : 3},
+    { id: "6", name: "Databases 2", prerequisites: ["4"], year : 3 },
+    { id: "9", name: "Distributed Systems", prerequisites: ["5"], year : 3 },
+    { id: "10", name: "Coding", prerequisites: ["1"], year :1},
+    { id: "8", name: "Parallel Programming", prerequisites: ["10"], year : 3}
 ];
 
 const initialNodes = [
@@ -68,6 +68,35 @@ function PlanTree() {
     const [treeEdges, setTreeEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [courseList, setCourseList] = useState(initialCourseList); 
 
+    const createYearGroups = (nodes) => {
+        const groupedNodes = [];
+        const yearGroups = {};
+
+        nodes.forEach((node) =>{
+            const course = courseList.find((c) => c.id ==== node.id);
+            if(course) {
+                const year = course.year;
+
+                if(!yearGroups[year]) {
+                    const groupNode = {
+                        id: `group-${year}`,
+                        type: "group",
+                        data: { label: `Year ${year}` },
+                        position: { x: 0, y: 0 },
+                        style: {
+                            border: "2px solid #777",
+                            padding: 10,
+                            backgroundColor: "rgba(240, 240, 240, 0.8)"
+                        },
+                    };
+                    yearGroups[year] = groupNode;
+                    groupedNodes.push(groupNode);
+                }
+                groupedNodes.push({ ...node, parentNode: `group-${year}` });
+            }
+        });
+        return groupedNodes;
+    }
 
     const updateLayout = useCallback(async () => {
 
@@ -83,10 +112,11 @@ function PlanTree() {
         };
 
         const layouted = await getLayoutedElements(treeNodes, treeEdges, layoutOptions);
-        setTreeNodes(layouted.nodes);
+        const groupedNodes = createYearGroups(layouted.nodes);
+        setTreeNodes(groupedNodes);
         setTreeEdges(layouted.edges);
 
-    }, [treeNodes, treeEdges]);
+    }, [treeNodes, treeEdges, courseList]);
 
     const isCourseInTree = (courseId) => treeNodes.some((node) => node.id === courseId);
 
