@@ -26,13 +26,10 @@ const initialNodes = [
 
 const initialEdges = [];
 
-const getLayoutedElements = async (nodes, edges, options = {}) => {
+const getLayoutedElements = async (nodes, edges, options) => {
     const elkGraph = {
         id: "root",
-        layoutOptions: {
-            "elk.algorithm": "layered",
-            ...options,
-        },
+        layoutOptions: options,
         children: nodes.map((node) => ({
             id: node.id,
             width: 150,
