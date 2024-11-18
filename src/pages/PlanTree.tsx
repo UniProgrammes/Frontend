@@ -9,15 +9,15 @@ const elk = new ELK();
 
 // Testing set for the courses awaiting for the link to the backend
 const initialCourseList = [
-    { id: "2", name: "Data Structures", prerequisites: ["1"] },
-    { id: "3", name: "Algorithms", prerequisites: ["1"] },
-    { id: "4", name: "Databases", prerequisites: ["2"] },
-    { id: "5", name: "Operating Systems", prerequisites: ["2"] },
-    { id: "6", name: "Databases 2", prerequisites: ["4"] },
-    { id: "7", name: "Operating Systems 2", prerequisites: ["3"] },
-    { id: "9", name: "Distributed Systems", prerequisites: ["5"] },
-    { id: "10", name: "Coding", prerequisites: ["1"] },
-    { id: "8", name: "Parallel Programming", prerequisites: ["5", "10"] }
+    { id: "2", name: "Data Structures", prerequisites: ["1"], year: 1 },
+    { id: "3", name: "Algorithms", prerequisites: ["1"], year: 1 },
+    { id: "4", name: "Databases", prerequisites: ["2"], year: 2 },
+    { id: "5", name: "Operating Systems", prerequisites: ["2"], year: 2 },
+    { id: "7", name: "Operating Systems 2", prerequisites: ["5"], year: 3 },
+    { id: "6", name: "Databases 2", prerequisites: ["4"], year: 3 },
+    { id: "9", name: "Distributed Systems", prerequisites: ["5"], year: 3 },
+    { id: "10", name: "Coding", prerequisites: ["1"], year: 1 },
+    { id: "8", name: "Parallel Programming", prerequisites: ["5", "10"], year: 3 }
 ];
 
 const initialNodes = [
