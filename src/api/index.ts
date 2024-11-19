@@ -61,7 +61,7 @@ export interface StudyPlan {
   name: string,
   status: string,
   user: number,
-  courses: Course[]
+  courses: string[]
 }
 
 export interface StudyPlanGetResponse {
@@ -154,3 +154,8 @@ export const saveStudyPlan = async (studyPlan: {name: string}) => {
   const response = await client.post<StudyPlan>("/v1/study-plans", studyPlan);
   return response.data;
 };
+
+export const addCoursesToStudyPlan = async (studyPlan: StudyPlan, courses: {courses: Course[]}) => {
+  const response = await client.post(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
+  return response.data;
+}
