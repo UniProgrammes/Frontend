@@ -7,16 +7,18 @@ import StudyPlanCard from "~/components/StudyPlanCard";
 function Dashboard() {
     
     const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([]);
+    // const [user, setUser] = useState({});
 
     useEffect(() => {
-        async function getStidyPlans() {
+        async function getStudyPlans() {
             const response = await client.get<StudyPlanGetResponse>("/v1/study-plans");
             setStudyPlans(response.data.results);
             console.log(studyPlans);
         }
 
-        getStidyPlans();
+        getStudyPlans();
     }, [])
+
 
     return(
         <div className="flex flex-row max-h-full max-w-full">
@@ -51,7 +53,9 @@ function Dashboard() {
                             ))}
                         </div>
                     ) : (
-                        <p>You don't have any study plan</p>
+                        <p className="text-2xl text-gray-600 text-center m-36">
+                            You don't have any study plan yet
+                        </p>
                     )}
                 </main>
             </div>
