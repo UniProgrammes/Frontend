@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { getAllProgrammes, getAllCourses } from "~/api";
+import { getAllProgrammes, getAllCourses, saveStudyPlan } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
 interface Programme {
@@ -103,6 +103,7 @@ function CreatePlan() {
     };
 
     const handleCreateStudyPlan = () => {
+        const studyPlan = saveStudyPlan({name: ""});
         
     }
 
@@ -210,6 +211,7 @@ function CreatePlan() {
                                 <button 
                                     className="block text-xl w-auto m-4 h-10 text-left p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
                                     disabled={selectedCourses.length === 0}
+                                    onClick={handleCreateStudyPlan}
                                 >
                                     Save Plan
                                 </button>
