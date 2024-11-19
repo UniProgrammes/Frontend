@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 import { client } from "~/api";
 
 interface Programme {
@@ -62,7 +63,7 @@ function ViewProgramme() {
             
             setProgrammes(programmeResponse.data.results);
             setCourses(courseResponse.data.results);
-        } catch (err) {
+        } catch (_) {
             setError("Failed to fetch results. Please try again.");
             setProgrammes([]);
             setCourses([]);
@@ -142,7 +143,7 @@ function ViewProgramme() {
                             className="w-full rounded-md p-2"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                            onKeyPress={async (e) => e.key === "Enter" && handleSearch()}
                         />
                         <button 
                             onClick={handleSearch}

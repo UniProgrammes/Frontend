@@ -17,24 +17,20 @@ import {
 import "@xyflow/react/dist/style.css"
 import { MagicWandIcon } from "@radix-ui/react-icons"
 */
+import ELK, { LayoutOptions } from "elkjs/lib/elk.bundled.js";
 import ReactFlow, {
     ReactFlowProvider,
-    addEdge,
     MiniMap,
     Controls,
     Background,
-    NodeChange,
-    EdgeChange,
-    Connection,
-    Edge,
-    Node,
     useNodesState,
-    useEdgesState
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+    useEdgesState,
+    Edge,
+    Node
+} from "reactflow";
+import "reactflow/dist/style.css";
 
 
-import ELK from "elkjs/lib/elk.bundled.js";
 
 const elk = new ELK();
 
@@ -55,9 +51,9 @@ const initialNodes = [
     { id: "1", type: "input", data: { label: "Program" }, position: { x: 250, y: 5 } },
 ];
 
-const initialEdges = [];
+const initialEdges: Edge[] = [];
 
-const getLayoutedElements = async (nodes, edges, options) => {
+const getLayoutedElements = async (nodes: Node[], edges: Edge[], options: LayoutOptions) => {
     const elkGraph = {
         id: "root",
         layoutOptions: options,
@@ -76,12 +72,12 @@ const getLayoutedElements = async (nodes, edges, options) => {
     const layoutedGraph = await elk.layout(elkGraph);
 
     const updatedNodes = nodes.map((node) => {
-        const layoutedNode = layoutedGraph.children.find((n) => n.id === node.id);
+        const layoutedNode = layoutedGraph.children?.find((n) => n.id === node.id);
         return {
             ...node,
             position: {
-                x: layoutedNode.x,
-                y: layoutedNode.y,
+                x: layoutedNode?.x ?? 0,
+                y: layoutedNode?.y ?? 0,
             },
             draggable: true,
         };
@@ -94,7 +90,7 @@ const getLayoutedElements = async (nodes, edges, options) => {
 function PlanTree() {
     const [treeNodes, setTreeNodes, onNodesChange] = useNodesState(initialNodes);
     const [treeEdges, setTreeEdges, onEdgesChange] = useEdgesState(initialEdges);
-    const [courseList, setCourseList] = useState(initialCourseList);
+    const [courseList, _] = useState(initialCourseList);
 
 
     const updateLayout = useCallback(async () => {
@@ -114,9 +110,10 @@ function PlanTree() {
         setTreeNodes(layouted.nodes);
         setTreeEdges(layouted.edges);
 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [treeNodes, treeEdges]);
 
-    const isCourseInTree = (courseId) => treeNodes.some((node) => node.id === courseId);
+    const isCourseInTree = (courseId: string) => treeNodes.some((node) => node.id === courseId);
 
     const updatePrerequisiteStatus = useCallback(() => {
         // First update all nodes
@@ -145,7 +142,7 @@ function PlanTree() {
 
         // Then rebuild all edges
         setTreeEdges(() => {
-            const newEdges = [];
+            const newEdges: Edge[] = [];
 
             // Loop through all nodes in the tree
             treeNodes.forEach((node) => {
@@ -170,6 +167,7 @@ function PlanTree() {
             return newEdges;
         });
 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [courseList, treeNodes]);
 
 
@@ -178,7 +176,7 @@ function PlanTree() {
         updatePrerequisiteStatus();
     }, [treeNodes, updatePrerequisiteStatus]);
 
-    const removeCourseFromTree = useCallback((courseId) => {
+    const removeCourseFromTree = useCallback((courseId: string) => {
         setTreeNodes(function (nodes) {
             // Remove the node, if and only if it's not root node(s)
             const rootNodes = initialNodes.map(node => node.id);
@@ -187,14 +185,15 @@ function PlanTree() {
                 return nodes;
             return nodes.filter((node) => node.id !== courseId);
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const onDragOver = useCallback((event) => {
+    const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
     }, []);
 
-    const onDrop = useCallback((event) => {
+    const onDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         const courseId = event.dataTransfer.getData("application/courseId");
         const course = courseList.find((c) => c.id === courseId);
@@ -227,6 +226,7 @@ function PlanTree() {
             setTreeNodes((nodes) => [...nodes, newNode]);
 
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [courseList, isCourseInTree]);
 
     const fitViewOptions = {
@@ -260,7 +260,7 @@ function PlanTree() {
                                     onDrop={onDrop}
                                 >
                                     <MiniMap position="top-right" />
-                                    <Controls position='top-left' orientation='horizontal'
+                                    <Controls position="top-left" orientation="horizontal"
                                         onFitView={updateLayout}
                                         showInteractive={false}
                                         fitViewOptions={fitViewOptions} >

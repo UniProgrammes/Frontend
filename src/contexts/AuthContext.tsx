@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,21 +15,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     setIsAuthenticated(!!token);
   }, []);
 
   const login = (tokens: { access: string; refresh: string }) => {
-    localStorage.setItem('accessToken', tokens.access);
-    localStorage.setItem('refreshToken', tokens.refresh);
+    localStorage.setItem("accessToken", tokens.access);
+    localStorage.setItem("refreshToken", tokens.refresh);
     setIsAuthenticated(true);
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   const logout = () => {
     localStorage.clear();
     setIsAuthenticated(false);
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -41,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }; 
