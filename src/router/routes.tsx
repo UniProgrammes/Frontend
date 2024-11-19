@@ -1,14 +1,13 @@
 import React from "react";
-import CreatePlan from "~/pages/CreatePlan";
 
+import CreatePlan from "~/pages/CreatePlan";
 import Dashboard from "~/pages/Dashboard";
 import Home from "~/pages/Home";
-import ViewProgramme from "~/pages/ViewProgramme";
 import PlanTree from "~/pages/PlanTree";
-import TestBackendConnection from "~/pages/TestBackendConnection";
-import StudyPlanView from "~/pages/StudyPlanView";
-import { RouterItem } from "~/types/router";
 import Profile from "~/pages/Profile";
+import StudyPlanView from "~/pages/StudyPlanView";
+import ViewProgramme from "~/pages/ViewProgramme";
+import { RouterItem } from "~/types/router";
 
 const routes: RouterItem[] = [
   {

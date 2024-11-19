@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import CourseCard from "~/components/CourseCard";
+
 import { getAllProgrammes, getAllCourses } from "~/api";
+import CourseCard from "~/components/CourseCard";
 
 interface Programme {
   id: string;
@@ -46,21 +47,20 @@ function CreatePlan() {
                 ]);
 
                 if (!programmesData || programmesData.length === 0) {
-                    setError('No programmes available');
+                    setError("No programmes available");
                     setProgrammes([]);
                 } else {
                     setProgrammes(programmesData);
                 }
 
                 if (!coursesData || coursesData.length === 0) {
-                    setError(prev => prev ? `${prev}, No courses available` : 'No courses available');
+                    setError(prev => prev ? `${prev}, No courses available` : "No courses available");
                     setCourses([]);
                 } else {
                     setCourses(coursesData);
                 }
-            } catch (error) {
-                setError('Failed to fetch data. Please try again later.');
-                console.error('Error fetching data:', error);
+            } catch (_) {
+                setError("Failed to fetch data. Please try again later.");
             } finally {
                 setLoading(false);
             }
@@ -84,7 +84,7 @@ function CreatePlan() {
     }, [selectedProgramme, courses, programmes]);
 
     const handleProgramTreeClick = () => {
-        window.location.href = '/plantree';
+        window.location.href = "/plantree";
     };
 
     const handleCourseSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {

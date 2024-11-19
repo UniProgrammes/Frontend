@@ -1,4 +1,5 @@
 import React from "react";
+
 import StudyPlanCard from "~/components/StudyPlanCard";
 
 // Acces this page, change the url to .../dashboard

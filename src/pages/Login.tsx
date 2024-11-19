@@ -1,21 +1,23 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { authAPI } from '../api';
-import { useAuth } from '../contexts/AuthContext';
+import { useState } from "react";
+
+import { Link } from "react-router-dom";
+
+import { login as apiLogin } from "../api";
+import { useAuth } from "../contexts/AuthContext";
 
 export const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const data = await authAPI.login(username, password);
+      const data = await apiLogin({ username, password });
       login(data);
-    } catch (err) {
-      setError('Invalid credentials');
+    } catch (_) {
+      setError("Invalid credentials");
     }
   };
 
