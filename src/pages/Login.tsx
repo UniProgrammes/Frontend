@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { Link } from "react-router-dom";
 
-import { authAPI } from "../api";
+import { login as apiLogin } from "../api";
 import { useAuth } from "../contexts/AuthContext";
 
 export const Login = () => {
@@ -14,9 +14,9 @@ export const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const data = await authAPI.login(username, password);
+      const data = await apiLogin({ username, password });
       login(data);
-    } catch (err) {
+    } catch (_) {
       setError("Invalid credentials");
     }
   };

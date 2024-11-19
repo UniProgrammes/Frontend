@@ -60,8 +60,8 @@ function CreatePlan() {
                     setCourses(coursesData);
                 }
             } catch (error) {
-                setError("Failed to fetch data. Please try again later.");
-                console.error("Error fetching data:", error);
+                setError('Failed to fetch data. Please try again later.');
+                console.error('Error fetching data:', error);
             } finally {
                 setLoading(false);
             }

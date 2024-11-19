@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { User } from "~/types/users";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 // Types for auth
@@ -87,7 +89,7 @@ client.interceptors.request.use((config) => {
 
 // Auth functions
 export const register = async (data: RegisterData) => {
-  const response = await client.post("/v1/users/register/", data);
+  const response = await client.post('/v1/users/register/', data);
   return response.data;
 };
 
@@ -99,16 +101,15 @@ export const login = async (data: LoginData) => {
 
 // Initialize auth on app load
 export const initializeAuth = async () => {
+  // You can modify these credentials as needed
+  const credentials = {
+    username: "perfect",
+    password: "Hello1234"
+  };
   try {
-    // You can modify these credentials as needed
-    const credentials = {
-      username: "perfect",
-      password: "Hello1234"
-    };
-
     // Try to login first
     await login(credentials);
-  } catch (error) {
+  } catch (_) {
     // If login fails, try to register and then login
     try {
       await register({
@@ -120,7 +121,7 @@ export const initializeAuth = async () => {
       });
       await login(credentials);
     } catch (registerError) {
-      console.error("Auth initialization failed:", registerError);
+      console.error('Auth initialization failed:', registerError);
     }
   }
 };
