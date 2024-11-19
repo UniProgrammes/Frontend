@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { User } from "~/types/users";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 // Types for auth
@@ -61,7 +63,7 @@ export const client = axios.create({
 
 // Add auth interceptor
 client.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem("accessToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -70,28 +72,27 @@ client.interceptors.request.use((config) => {
 
 // Auth functions
 export const register = async (data: RegisterData) => {
-  const response = await client.post('/v1/users/register/', data);
+  const response = await client.post<User>("/v1/users/register/", data);
   return response.data;
 };
 
 export const login = async (data: LoginData) => {
-  const response = await client.post<LoginResponse>('/v1/users/login/', data);
-  localStorage.setItem('accessToken', response.data.access);
+  const response = await client.post<LoginResponse>("/v1/users/login/", data);
+  localStorage.setItem("accessToken", response.data.access);
   return response.data;
 };
 
 // Initialize auth on app load
 export const initializeAuth = async () => {
+  // You can modify these credentials as needed
+  const credentials = {
+    username: "perfect",
+    password: "Hello1234"
+  };
   try {
-    // You can modify these credentials as needed
-    const credentials = {
-      username: "perfect",
-      password: "Hello1234"
-    };
-
     // Try to login first
     await login(credentials);
-  } catch (error) {
+  } catch (_) {
     // If login fails, try to register and then login
     try {
       await register({
@@ -102,15 +103,14 @@ export const initializeAuth = async () => {
         enrollment_number: "12345678"
       });
       await login(credentials);
-    } catch (registerError) {
-      console.error('Auth initialization failed:', registerError);
+    } catch (_) {
     }
   }
 };
 
 // API functions
 export const getAllProgrammes = async () => {
-  const response = await client.get<ProgrammeResponse>('/v1/programmes/');
+  const response = await client.get<ProgrammeResponse>("/v1/programmes/");
   return response.data.results;
 };
 
@@ -124,6 +124,6 @@ interface CourseResponse {
 
 // Update the getAllCourses function
 export const getAllCourses = async () => {
-  const response = await client.get<CourseResponse>('/v1/courses/');
+  const response = await client.get<CourseResponse>("/v1/courses/");
   return response.data.results; // Return the results array instead of response.data
 };

@@ -1,19 +1,21 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { authAPI } from '../api';
+import { useState } from "react";
+
+import { Link, useNavigate } from "react-router-dom";
+
+import { register } from "../api";
 
 export const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: '',
-    first_name: '',
-    middle_name: '',
-    last_name: '',
-    email: '',
-    enrollment_number: '',
-    password: '',
+    username: "",
+    first_name: "",
+    middle_name: "",
+    last_name: "",
+    email: "",
+    enrollment_number: "",
+    password: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -25,10 +27,10 @@ export const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await authAPI.register(formData);
-      navigate('/login');
-    } catch (err) {
-      setError('Registration failed');
+      await register(formData);
+      navigate("/login");
+    } catch (_) {
+      setError("Registration failed");
     }
   };
 
@@ -127,4 +129,4 @@ export const Register = () => {
       </div>
     </div>
   );
-}; 
+};
