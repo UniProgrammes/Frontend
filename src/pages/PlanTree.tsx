@@ -17,11 +17,11 @@ import {
 import "@xyflow/react/dist/style.css"
 import { MagicWandIcon } from "@radix-ui/react-icons"
 */
+import { Controls } from "@xyflow/react";
 import ELK, { LayoutOptions } from "elkjs/lib/elk.bundled.js";
 import ReactFlow, {
     ReactFlowProvider,
     MiniMap,
-    Controls,
     Background,
     useNodesState,
     useEdgesState,
