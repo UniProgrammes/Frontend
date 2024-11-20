@@ -260,7 +260,7 @@ function PlanTree() {
                                     onDrop={onDrop}
                                 >
                                     <MiniMap position="top-right" />
-                                    <Controls position="top-left" orientation="horizontal"
+                                    <Controls position="top-left"
                                         onFitView={updateLayout}
                                         showInteractive={false}
                                         fitViewOptions={fitViewOptions} >
