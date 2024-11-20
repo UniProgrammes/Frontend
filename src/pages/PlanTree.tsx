@@ -260,10 +260,7 @@ function PlanTree() {
                                     onDrop={onDrop}
                                 >
                                     <MiniMap position="top-right" />
-                                    <Controls position="top-left" orientation="horizontal"
-                                        onFitView={updateLayout}
-                                        showInteractive={false}
-                                        fitViewOptions={fitViewOptions} >
+                                    <Controls position="top-left">
                                     </Controls>
                                     <Background />
                                 </ReactFlow>
