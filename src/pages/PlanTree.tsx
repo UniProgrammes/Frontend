@@ -73,7 +73,7 @@ function PlanTree() {
         const yearGroups = {};
 
         nodes.forEach((node) =>{
-            const course = courseList.find((c) => c.id ==== node.id);
+            const course = courseList.find((c) => c.id === node.id);
             if(course) {
                 const year = course.year;
 
