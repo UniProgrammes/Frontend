@@ -96,6 +96,7 @@ client.interceptors.request.use((config) => {
 // Auth functions
 export const register = async (data: RegisterData) => {
   const response = await client.post("/v1/users/register/", data);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return response.data;
 };
 
@@ -132,11 +133,12 @@ export const getAllStudyPlans = async () => {
 
 export const saveStudyPlan = async (studyPlan: {name: string}) => {
   const response = await client.post<StudyPlan>("/v1/study-plans/", studyPlan);
-  console.log(response.data);
+  //console.log(response.data);
   return response.data;
 };
 
 export const addCoursesToStudyPlan = async (studyPlan: StudyPlan, courses: {courses: CourseListPost[]}) => {
   const response = await client.post(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return response.data;
 }

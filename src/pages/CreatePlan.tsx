@@ -61,6 +61,7 @@ function CreatePlan() {
                 }
             } catch (error) {
                 setError("Failed to fetch data. Please try again later.");
+                // eslint-disable-next-line no-console
                 console.error("Error fetching data:", error);
             } finally {
                 setLoading(false);
