@@ -1,9 +1,9 @@
 export type User = {
   id: number;
   username: string;
-  first_name: string;
-  middle_name: string;
-  last_name: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
   email: string;
-  enrollment_number: string;
+  enrollmentNumber: string;
 };
