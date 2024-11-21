@@ -11,8 +11,8 @@ function Dashboard() {
 
     useEffect(() => {
         async function getStudyPlans() {
-            const response = await client.get<StudyPlanGetResponse>("/v1/study-plans");
-            setStudyPlans(response.data.results);
+            const data = await getAllStudyPlans();
+            setStudyPlans(data);
             console.log(studyPlans);
         }
 
@@ -46,7 +46,7 @@ function Dashboard() {
                                 <StudyPlanCard
                                     id={studyPlan.id}
                                     name={studyPlan.name}
-                                    completed={studyPlan.status === "draft"}
+                                    completed={studyPlan.status !== "draft"}
                                     numCourses={studyPlan.courses.length}
                                     lastUpdate={studyPlan.updated_at.slice(0, 10)}
                                     />
