@@ -18,11 +18,6 @@ function Profile() {
         <div className="flex flex-row max-h-full max-w-full">
 
             <div id="main-content" className="w-full flex flex-col">
-                <header id="top-buttons" className="m-8 flex items-center justify-between">
-                    <button id="user-identifier" className="bg-neutral-300 rounded-2xl text-2xl p-4">User</button>
-                    <button id="notifications-button" className="bg-neutral-300 rounded-2xl text-2xl p-4">Notifications</button>
-                </header>
-
                 <main className="bg-neutral-200 rounded-3xl p-8 m-8">
                     <div className="flex flex-col items-center">
                         <h2 className="text-2xl font-bold mb-4">Change your profile settings</h2>
