@@ -1,10 +1,25 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
+import { client, getAllStudyPlans, StudyPlan, StudyPlanGetResponse } from "~/api";
 import StudyPlanCard from "~/components/StudyPlanCard";
 
-// Acces this page, change the url to .../dashboard
 
 function Dashboard() {
+    
+    const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([]);
+    // const [user, setUser] = useState({});
+
+    useEffect(() => {
+        async function getStudyPlans() {
+            const data = await getAllStudyPlans();
+            setStudyPlans(data);
+            console.log(studyPlans);
+        }
+
+        getStudyPlans();
+    }, [])
+
+
     return(
         <div className="flex flex-row max-h-full max-w-full">
             <div id="main-content" className="w-full flex flex-col">
@@ -17,10 +32,23 @@ function Dashboard() {
                             <h3 className="h-full align-middle text-2xl">Sort By</h3>
                         </div>
                     </div>
-                    <div id="study-plan" className="flex space-x-8 p-4">
-                        <StudyPlanCard name="Study Plan 1" completed="" numCourses="5" lastUpdate="2024-03-02"/>
-                        <StudyPlanCard name="Study Plan 2" completed="" numCourses="5" lastUpdate="2024-03-02"/>
-                    </div>
+                    {studyPlans.length > 0 ? (
+                        <div  id="study-plan" className="flex space-x-8 p-4">
+                            {studyPlans.map((studyPlan) => (
+                                <StudyPlanCard
+                                    id={studyPlan.id}
+                                    name={studyPlan.name}
+                                    completed={studyPlan.status !== "draft"}
+                                    numCourses={studyPlan.courses.length}
+                                    lastUpdate={studyPlan.updated_at.slice(0, 10)}
+                                    />
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-2xl text-gray-600 text-center m-36">
+                            You don't have any study plan yet
+                        </p>
+                    )}
                 </main>
             </div>
         </div>

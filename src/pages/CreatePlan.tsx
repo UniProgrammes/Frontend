@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { getAllProgrammes, getAllCourses } from "~/api";
+import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
 interface Programme {
@@ -59,8 +59,9 @@ function CreatePlan() {
                 } else {
                     setCourses(coursesData);
                 }
-            } catch (_) {
-                setError("Failed to fetch data. Please try again later.");
+            } catch (error) {
+                setError('Failed to fetch data. Please try again later.');
+                console.error('Error fetching data:', error);
             } finally {
                 setLoading(false);
             }
@@ -100,6 +101,23 @@ function CreatePlan() {
             prevCourses.filter(course => course.code !== courseCode)
         );
     };
+
+    const handleCreateStudyPlan = () => {
+        async function savePlan() {
+            const body = {name: "New study plan 1"};
+            const studyPlan = await saveStudyPlan(body);
+
+            const bodyRequest = selectedCourses.map((c) => {
+                return {
+                    id: c.id,
+                    semester: 2
+                }
+            });
+
+            addCoursesToStudyPlan(studyPlan, {courses: bodyRequest});
+        }
+        savePlan();
+    }
 
     const renderProgrammeSelect = () => (
         <div id="choose-program" className="flex items-center justify-between bg-[#C3AAEA] rounded-xl h-16 p-2 m-8">
@@ -197,6 +215,7 @@ function CreatePlan() {
                                 <button 
                                     className="block text-xl w-auto m-4 h-10 text-left p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
                                     disabled={selectedCourses.length === 0}
+                                    onClick={handleCreateStudyPlan}
                                 >
                                     Save Plan
                                 </button>
