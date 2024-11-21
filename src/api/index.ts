@@ -73,6 +73,11 @@ export interface StudyPlanGetResponse {
   results: StudyPlan[];
 }
 
+interface CourseListPost {
+    id: string;
+    semester: number;
+}
+
 // Create axios instance
 export const client = axios.create({
   baseURL: API_URL,
@@ -152,11 +157,12 @@ export const getAllStudyPlans = async () => {
 };
 
 export const saveStudyPlan = async (studyPlan: {name: string}) => {
-  const response = await client.post<StudyPlan>("/v1/study-plans", studyPlan);
+  const response = await client.post<StudyPlan>("/v1/study-plans/", studyPlan);
+  console.log(response.data);
   return response.data;
 };
 
-export const addCoursesToStudyPlan = async (studyPlan: StudyPlan, courses: {courses: Course[]}) => {
+export const addCoursesToStudyPlan = async (studyPlan: StudyPlan, courses: {courses: CourseListPost[]}) => {
   const response = await client.post(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
   return response.data;
 }
