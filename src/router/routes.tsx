@@ -36,13 +36,14 @@ const routes: RouterItem[] = [
     component: <StudyPlanView />,
   },
   {
-    title: "Profile", 
-    path: "/profile", 
+    title: "Profile",
+    path: "/profile",
     component: <Profile />,
+    isPrivate: true,
   },
   {
-    title: "View Programme & Courses", 
-    path: "/view-programme", 
+    title: "View Programme & Courses",
+    path: "/view-programme",
     component: <ViewProgramme />,
   },
 ];
