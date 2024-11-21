@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { client, getAllStudyPlans, StudyPlan, StudyPlanGetResponse } from "~/api";
+import { getAllStudyPlans, StudyPlan } from "~/api";
 import StudyPlanCard from "~/components/StudyPlanCard";
 
 
@@ -13,7 +13,7 @@ function Dashboard() {
         async function getStudyPlans() {
             const data = await getAllStudyPlans();
             setStudyPlans(data);
-            console.log(studyPlans);
+            //console.log(studyPlans);
         }
 
         getStudyPlans();

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import useMainStore from "~/stores/mainStore";
-import { User } from "~/types/users";
+//import { User } from "~/types/users";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -95,7 +95,7 @@ client.interceptors.request.use((config) => {
 
 // Auth functions
 export const register = async (data: RegisterData) => {
-  const response = await client.post('/v1/users/register/', data);
+  const response = await client.post("/v1/users/register/", data);
   return response.data;
 };
 
