@@ -2,14 +2,17 @@ import React from "react";
 
 import { Link, useLocation } from "react-router-dom";
 
+import useMainStore from "~/stores/mainStore";
+
 const SideBar: React.FC = () => {
   const location = useLocation();
+  const { isLoggedIn } = useMainStore();
 
   const menuItems = [
     { path: "/dashboard", label: "Dashboard" },
     { path: "/createplan", label: "Create Plan" },
     { path: "/view-programme", label: "View Programme & Courses" },
-    { path: "/profile", label: "Profile" },
+    { path: "/profile", label: "Profile", isPrivate: true },
     { path: "/help", label: "Help" },
   ];
 
@@ -22,9 +25,9 @@ const SideBar: React.FC = () => {
         <div className="flex-1 mt-6">
           <h2 className="px-4 py-2 text-sm font-light text-white">MENU</h2>
           <ul className="flex flex-col gap-4 px-2">
-            {menuItems.map((item) => (
-              <Link 
-                to={item.path} 
+            {menuItems.filter((item) => !item.isPrivate || isLoggedIn).map((item) => (
+              <Link
+                to={item.path}
                 key={item.path}
                 className={`block text-sm w-full px-3 py-2 rounded-lg text-white ${
                   location.pathname === item.path ? "bg-purple-800" : "bg-purple-600 hover:bg-purple-700"
