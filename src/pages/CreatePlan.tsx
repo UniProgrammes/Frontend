@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { getAllProgrammes, getAllCourses, saveStudyPlan } from "~/api";
+import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
 interface Programme {
@@ -103,8 +103,20 @@ function CreatePlan() {
     };
 
     const handleCreateStudyPlan = () => {
-        const studyPlan = saveStudyPlan({name: ""});
-        
+        async function savePlan() {
+            const body = {name: "New study plan 1"};
+            const studyPlan = await saveStudyPlan(body);
+
+            const bodyRequest = selectedCourses.map((c) => {
+                return {
+                    id: c.id,
+                    semester: 2
+                }
+            });
+
+            addCoursesToStudyPlan(studyPlan, {courses: bodyRequest});
+        }
+        savePlan();
     }
 
     const renderProgrammeSelect = () => (
