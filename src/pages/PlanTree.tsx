@@ -17,7 +17,6 @@ import {
 import "@xyflow/react/dist/style.css"
 import { MagicWandIcon } from "@radix-ui/react-icons"
 */
-import { Controls } from "@xyflow/react";
 import ELK, { LayoutOptions } from "elkjs/lib/elk.bundled.js";
 import ReactFlow, {
     ReactFlowProvider,
@@ -26,7 +25,8 @@ import ReactFlow, {
     useNodesState,
     useEdgesState,
     Edge,
-    Node
+    Node,
+    Controls
 } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -260,7 +260,7 @@ function PlanTree() {
                                     onDrop={onDrop}
                                 >
                                     <MiniMap position="top-right" />
-                                    <Controls position="top-left" orientation="horizontal"
+                                    <Controls position="top-left"
                                         onFitView={updateLayout}
                                         showInteractive={false}
                                         fitViewOptions={fitViewOptions} >
