@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import useMainStore from "~/stores/mainStore";
 import { User } from "~/types/users";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -63,7 +64,7 @@ export const client = axios.create({
 
 // Add auth interceptor
 client.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+  const token = useMainStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -80,32 +81,6 @@ export const login = async (data: LoginData) => {
   const response = await client.post<LoginResponse>("/v1/users/login/", data);
   localStorage.setItem("accessToken", response.data.access);
   return response.data;
-};
-
-// Initialize auth on app load
-export const initializeAuth = async () => {
-  // You can modify these credentials as needed
-  const credentials = {
-    username: "perfect",
-    password: "Hello1234"
-  };
-  try {
-    // Try to login first
-    await login(credentials);
-  } catch (_) {
-    // If login fails, try to register and then login
-    try {
-      await register({
-        ...credentials,
-        first_name: "John",
-        last_name: "Doe",
-        email: "perfection@yopmail.com",
-        enrollment_number: "12345678"
-      });
-      await login(credentials);
-    } catch (_) {
-    }
-  }
 };
 
 // API functions
