@@ -1,34 +1,37 @@
 // App.js
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from "react";
+
 import ReactFlow, {
     ReactFlowProvider,
     MiniMap,
     Background,
     Controls,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
-import ELK from 'elkjs/lib/elk.bundled.js';
+} from "reactflow";
+
+import "reactflow/dist/style.css";
+
+import ELK from "elkjs/lib/elk.bundled.js";
 
 // Initial data
 const initialCourseList = [
-    { id: '2', name: 'Data Structures', prerequisites: ['1'], year: 1, hasMissingPrerequisites: false },
-    { id: '3', name: 'Algorithms', prerequisites: ['1'], year: 1, hasMissingPrerequisites: false },
-    { id: '4', name: 'Databases', prerequisites: ['2'], year: 2, hasMissingPrerequisites: false },
-    { id: '5', name: 'Operating Systems', prerequisites: ['2'], year: 2, hasMissingPrerequisites: false },
-    { id: '7', name: 'Operating Systems 2', prerequisites: ['5'], year: 3, hasMissingPrerequisites: false },
-    { id: '6', name: 'Databases 2', prerequisites: ['4'], year: 3, hasMissingPrerequisites: false },
-    { id: '9', name: 'Distributed Systems', prerequisites: ['5'], year: 3, hasMissingPrerequisites: false },
-    { id: '10', name: 'Coding', prerequisites: ['1'], year: 1, hasMissingPrerequisites: false },
-    { id: '8', name: 'Parallel Programming', prerequisites: ['10'], year: 3, hasMissingPrerequisites: false },
+    { id: "2", name: "Data Structures", prerequisites: ["1"], year: 1, hasMissingPrerequisites: false },
+    { id: "3", name: "Algorithms", prerequisites: ["1"], year: 1, hasMissingPrerequisites: false },
+    { id: "4", name: "Databases", prerequisites: ["2"], year: 2, hasMissingPrerequisites: false },
+    { id: "5", name: "Operating Systems", prerequisites: ["2"], year: 2, hasMissingPrerequisites: false },
+    { id: "7", name: "Operating Systems 2", prerequisites: ["5"], year: 3, hasMissingPrerequisites: false },
+    { id: "6", name: "Databases 2", prerequisites: ["4"], year: 3, hasMissingPrerequisites: false },
+    { id: "9", name: "Distributed Systems", prerequisites: ["5"], year: 3, hasMissingPrerequisites: false },
+    { id: "10", name: "Coding", prerequisites: ["1"], year: 1, hasMissingPrerequisites: false },
+    { id: "8", name: "Parallel Programming", prerequisites: ["10"], year: 3, hasMissingPrerequisites: false },
 ];
 
-const undeletableNodes = ['1'];
+const undeletableNodes = ["1"];
 
 const initialNodes = [
     {
-        id: '1',
-        type: 'input',
-        data: { label: 'Program' },
+        id: "1",
+        type: "input",
+        data: { label: "Program" },
         position: { x: 250, y: 5 }
     },
 ];
@@ -64,7 +67,7 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
     };
 
     const graph = {
-        id: 'root',
+        id: "root",
         layoutOptions: layoutOptions,
         children: elkNodes,
         edges: elkEdges,
@@ -80,7 +83,7 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
                 x: layoutNode.x,
                 y: layoutNode.y,
             },
-            draggable: false, // Prevent manual dragging since we're using automatic layout
+            draggable: false, // Prevent manual dragging since we"re using automatic layout
         };
     });
 
@@ -110,8 +113,8 @@ function App() {
                     return {
                         ...node,
                         style: hasMissingPrerequisites
-                            ? { backgroundColor: 'red', color: 'white' }
-                            : { backgroundColor: '#fff', color: '#000' },
+                            ? { backgroundColor: "red", color: "white" }
+                            : { backgroundColor: "#fff", color: "#000" },
                     };
                 }
                 return node;
@@ -124,13 +127,13 @@ function App() {
     const onDrop = useCallback(
         async (event) => {
             event.preventDefault();
-            const courseId = event.dataTransfer.getData('application/courseId');
+            const courseId = event.dataTransfer.getData("application/courseId");
             const course = courseList.find((c) => c.id === courseId);
 
             if (!course) return;
 
             if (isCourseInTree(course.id)) {
-                alert('Course already in tree');
+                alert("Course already in tree");
                 return;
             }
 
@@ -140,7 +143,7 @@ function App() {
                 position: { x: 0, y: 0 }, // Position will be updated by ELK
             };
 
-            let newEdges = [...edges];
+            const newEdges = [...edges];
 
             // Add edges to prerequisites if they exist
             course.prerequisites.forEach((preId) => {
@@ -172,7 +175,7 @@ function App() {
             });
 
             // Update nodes and edges
-            let newNodes = [...nodes, newNode];
+            const newNodes = [...nodes, newNode];
 
             // Re-layout the graph
             const layoutedElements = await getLayoutedElements(newNodes, newEdges);
@@ -189,13 +192,12 @@ function App() {
     // Function to handle drag over event
     const onDragOver = (event) => {
         event.preventDefault();
-        event.dataTransfer.dropEffect = 'move';
+        event.dataTransfer.dropEffect = "move";
     };
 
     // Function to handle node deletion
     const onNodeClick = useCallback(
         async (event, node) => {
-
             const nodeId = node.id;
 
             if (undeletableNodes.includes(nodeId)) return;
@@ -228,12 +230,12 @@ function App() {
     }, [edges]);
 
     return (
-        <div style={{ display: 'flex', height: '100vh' }}>
+        <div style={{ display: "flex", height: "100vh" }}>
             {/* React Flow Canvas */}
             <div style={{ flexGrow: 1 }}>
                 <ReactFlowProvider>
                     <div
-                        style={{ width: '100%', height: '100%' }}
+                        style={{ width: "100%", height: "100%" }}
                         onDrop={onDrop}
                         onDragOver={onDragOver}
                     >
@@ -255,31 +257,31 @@ function App() {
                 </ReactFlowProvider>
             </div>
             {/* Sidebar */}
-            <div style={{ width: '200px', padding: '10px', borderLeft: '1px solid #ccc' }}>
+            <div style={{ width: "200px", padding: "10px", borderLeft: "1px solid #ccc" }}>
                 <h3>Available Courses</h3>
-                <ul style={{ listStyle: 'none', padding: 0 }}>
+                <ul style={{ listStyle: "none", padding: 0 }}>
                     {courseList.map((course) => (
-                        <li key={course.id} style={{ marginBottom: '8px' }}>
+                        <li key={course.id} style={{ marginBottom: "8px" }}>
                             <div
                                 draggable={!isCourseInTree(course.id)}
                                 onDragStart={(e) => {
-                                    e.dataTransfer.setData('application/courseId', course.id);
-                                    e.dataTransfer.effectAllowed = 'move';
+                                    e.dataTransfer.setData("application/courseId", course.id);
+                                    e.dataTransfer.effectAllowed = "move";
                                 }}
                                 style={{
-                                    padding: '6px 12px',
-                                    backgroundColor: isCourseInTree(course.id) ? '#ddd' : '#4CAF50',
-                                    color: isCourseInTree(course.id) ? '#666' : 'white',
-                                    cursor: isCourseInTree(course.id) ? 'not-allowed' : 'grab',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    userSelect: 'none',
+                                    padding: "6px 12px",
+                                    backgroundColor: isCourseInTree(course.id) ? "#ddd" : "#4CAF50",
+                                    color: isCourseInTree(course.id) ? "#666" : "white",
+                                    cursor: isCourseInTree(course.id) ? "not-allowed" : "grab",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    userSelect: "none",
                                 }}
                             >
                                 <p>
                                     {course.name}
                                 </p>
-                                <p> {isCourseInTree(course.id) && '(In Tree)'} </p>
+                                <p> {isCourseInTree(course.id) && "(In Tree)"} </p>
                             </div>
                         </li>
                     ))}
