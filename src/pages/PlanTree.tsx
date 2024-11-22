@@ -11,15 +11,15 @@ import ELK from 'elkjs/lib/elk.bundled.js';
 
 // Initial data
 const initialCourseList = [
-    { id: '2', name: 'Data Structures', prerequisites: ['1'], year: 1 },
-    { id: '3', name: 'Algorithms', prerequisites: ['1'], year: 1 },
-    { id: '4', name: 'Databases', prerequisites: ['2'], year: 2 },
-    { id: '5', name: 'Operating Systems', prerequisites: ['2'], year: 2 },
-    { id: '7', name: 'Operating Systems 2', prerequisites: ['5'], year: 3 },
-    { id: '6', name: 'Databases 2', prerequisites: ['4'], year: 3 },
-    { id: '9', name: 'Distributed Systems', prerequisites: ['5'], year: 3 },
-    { id: '10', name: 'Coding', prerequisites: ['1'], year: 1 },
-    { id: '8', name: 'Parallel Programming', prerequisites: ['10'], year: 3 },
+    { id: '2', name: 'Data Structures', prerequisites: ['1'], year: 1, hasMissingPrerequisites: false },
+    { id: '3', name: 'Algorithms', prerequisites: ['1'], year: 1, hasMissingPrerequisites: false },
+    { id: '4', name: 'Databases', prerequisites: ['2'], year: 2, hasMissingPrerequisites: false },
+    { id: '5', name: 'Operating Systems', prerequisites: ['2'], year: 2, hasMissingPrerequisites: false },
+    { id: '7', name: 'Operating Systems 2', prerequisites: ['5'], year: 3, hasMissingPrerequisites: false },
+    { id: '6', name: 'Databases 2', prerequisites: ['4'], year: 3, hasMissingPrerequisites: false },
+    { id: '9', name: 'Distributed Systems', prerequisites: ['5'], year: 3, hasMissingPrerequisites: false },
+    { id: '10', name: 'Coding', prerequisites: ['1'], year: 1, hasMissingPrerequisites: false },
+    { id: '8', name: 'Parallel Programming', prerequisites: ['10'], year: 3, hasMissingPrerequisites: false },
 ];
 
 const undeletableNodes = ['1'];
@@ -105,7 +105,7 @@ function App() {
                 const course = courseList.find((c) => c.id === node.id);
                 if (course) {
                     const hasMissingPrerequisites = course.prerequisites.some(
-                        (preId) => !isCourseInTree(preId)
+                        (preId) => !isCourseInTree(preId) || course.hasMissingPrerequisites
                     );
                     return {
                         ...node,
@@ -199,35 +199,18 @@ function App() {
             const nodeId = node.id;
 
             if (undeletableNodes.includes(nodeId)) return;
+            // Remove node and connected edges
+            const newNodes = nodes.filter((n) => n.id !== nodeId);
+            const newEdges = edges.filter(
+                (e) => e.source !== nodeId && e.target !== nodeId
+            );
+            // Re-layout the graph
+            const layoutedElements = await getLayoutedElements(newNodes, newEdges);
+            // Update node styles
+            const styledNodes = updateNodeStyles(layoutedElements.nodes);
             
-
-            const childEdges = edges.filter((edge) => edge.source === nodeId);
-            const childNodeIds = childEdges.map((edge) => edge.target);
-
-            if (childNodeIds.length === 0) {
-                // Remove node and connected edges
-                const newNodes = nodes.filter((n) => n.id !== nodeId);
-                const newEdges = edges.filter(
-                    (e) => e.source !== nodeId && e.target !== nodeId
-                );
-
-                // Re-layout the graph
-                const layoutedElements = await getLayoutedElements(newNodes, newEdges);
-
-                // Update node styles
-                const styledNodes = updateNodeStyles(layoutedElements.nodes);
-
-                setNodes(styledNodes);
-                setEdges(layoutedElements.edges);
-            } else {
-                // Color child nodes red
-                const updatedNodes = nodes.map((n) =>
-                    childNodeIds.includes(n.id)
-                        ? { ...n, style: { backgroundColor: 'red', color: 'white' } }
-                        : n
-                );
-                setNodes(updatedNodes);
-            }
+            setNodes(styledNodes);
+            setEdges(layoutedElements.edges);
         },
         [nodes, edges, updateNodeStyles]
     );
@@ -246,8 +229,6 @@ function App() {
 
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
-            
-
             {/* React Flow Canvas */}
             <div style={{ flexGrow: 1 }}>
                 <ReactFlowProvider>
