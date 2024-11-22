@@ -14,3 +14,8 @@ Finally, launch your application:
 ```bash
 yarn dev
 ```
+
+3. Login to the application to use the API
+
+username: admin
+password: admin
