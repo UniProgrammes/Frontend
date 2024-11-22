@@ -126,7 +126,7 @@ function App() {
     const onDrop = useCallback(
         async (event: React.DragEvent<HTMLDivElement>) => {
             event.preventDefault();
-            const courseId = event.dataTransfer?.getData("application/courseId");
+            const courseId = event.dataTransfer.getData("application/courseId");
             const course = courseList.find((c) => c.id === courseId);
 
             if (!course) return;
@@ -190,7 +190,7 @@ function App() {
     );
 
     // Function to handle drag over event
-    const onDragOver = (event: { preventDefault: () => void; dataTransfer: { dropEffect: string; }; }) => {
+    const onDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
     };
@@ -198,8 +198,8 @@ function App() {
     // Function to handle node deletion
     const onNodeClick = useCallback(
         async (event: React.MouseEvent, node: { id: string; }) => {
+            event.preventDefault();
             const nodeId = node.id;
-
             if (undeletableNodes.includes(nodeId)) return;
             // Remove node and connected edges
             const newNodes = nodes.filter((n) => n.id !== nodeId);
@@ -223,7 +223,6 @@ function App() {
             // Re-layout the graph
             const layoutedElements = await getLayoutedElements(nodes, edges);
             const styledNodes = updateNodeStyles(layoutedElements.nodes);
-            
             //@ts-expect-error - setNodes expect the parsed type of the styledNodes
             setNodes(styledNodes);
             setEdges(layoutedElements.edges);
