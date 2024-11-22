@@ -1,16 +1,10 @@
-// App.js
+
 import React, { useState, useCallback, useEffect } from "react";
 
-import ReactFlow, {
-    ReactFlowProvider,
-    MiniMap,
-    Background,
-    Controls,
-} from "reactflow";
+import ELK from "elkjs/lib/elk.bundled.js";
+import ReactFlow, { ReactFlowProvider,MiniMap,Background, Controls, Node, Edge} from "reactflow";
 
 import "reactflow/dist/style.css";
-
-import ELK from "elkjs/lib/elk.bundled.js";
 
 // Initial data
 const initialCourseList = [
@@ -36,20 +30,20 @@ const initialNodes = [
     },
 ];
 
-const initialEdges = [];
+const initialEdges: Edge[] | (() => Edge[]) = [];
 
 // ELK instance
 const elk = new ELK();
 
 // Helper function to layout the nodes using ELK
-const getLayoutedElements = async (nodes, edges, options = {}) => {
-    const elkNodes = nodes.map((node) => ({
+const getLayoutedElements = async (nodes: Node[], edges: Edge[]) => {
+    const elkNodes = nodes.map((node: { id: string; }) => ({
         id: node.id,
         width: 150,
         height: 50,
     }));
 
-    const elkEdges = edges.map((edge) => ({
+    const elkEdges = edges.map((edge: { id: string; source: string; target: string; }) => ({
         id: edge.id,
         sources: [edge.source],
         targets: [edge.target],
@@ -75,19 +69,24 @@ const getLayoutedElements = async (nodes, edges, options = {}) => {
 
     const layout = await elk.layout(graph);
 
-    const layoutedNodes = nodes.map((node) => {
-        const layoutNode = layout.children.find((n) => n.id === node.id);
+    const layoutedNodes: Node[] = nodes.map((node: Node) => {
+        const layoutNode = layout.children?.find((n) => n.id === node.id);
+
+        if (!layoutNode) return node;
+
         return {
             ...node,
             position: {
-                x: layoutNode.x,
-                y: layoutNode.y,
+                x: layoutNode.x || 0,
+                y: layoutNode.y || 0,
             },
-            draggable: false, // Prevent manual dragging since we"re using automatic layout
+            draggable: false, // Prevent manual dragging since we're using automatic layout
         };
     });
 
-    return { nodes: layoutedNodes, edges };
+    const treeNodes: Node[] = layoutedNodes;
+
+    return { nodes: treeNodes, edges };
 };
 
 function App() {
@@ -97,14 +96,14 @@ function App() {
 
     // Function to check if a course is already in the tree
     const isCourseInTree = useCallback(
-        (courseId) => nodes.some((node) => node.id === courseId),
+        (courseId: string) => nodes.some((node) => node.id === courseId),
         [nodes]
     );
 
     // Function to update node styles based on prerequisites
     const updateNodeStyles = useCallback(
-        (nodesToUpdate) => {
-            return nodesToUpdate.map((node) => {
+        (nodesToUpdate: Node[]) => {
+            return nodesToUpdate.map((node: { id: string; }) => {
                 const course = courseList.find((c) => c.id === node.id);
                 if (course) {
                     const hasMissingPrerequisites = course.prerequisites.some(
@@ -125,9 +124,9 @@ function App() {
 
     // Function to handle drop event
     const onDrop = useCallback(
-        async (event) => {
+        async (event: React.DragEvent<HTMLDivElement>) => {
             event.preventDefault();
-            const courseId = event.dataTransfer.getData("application/courseId");
+            const courseId = event.dataTransfer?.getData("application/courseId");
             const course = courseList.find((c) => c.id === courseId);
 
             if (!course) return;
@@ -183,6 +182,7 @@ function App() {
             // Update node styles
             const styledNodes = updateNodeStyles(layoutedElements.nodes);
 
+            //@ts-expect-error - setNodes expect the parsed type of the styledNodes
             setNodes(styledNodes);
             setEdges(layoutedElements.edges);
         },
@@ -190,14 +190,14 @@ function App() {
     );
 
     // Function to handle drag over event
-    const onDragOver = (event) => {
+    const onDragOver = (event: { preventDefault: () => void; dataTransfer: { dropEffect: string; }; }) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
     };
 
     // Function to handle node deletion
     const onNodeClick = useCallback(
-        async (event, node) => {
+        async (event: React.MouseEvent, node: { id: string; }) => {
             const nodeId = node.id;
 
             if (undeletableNodes.includes(nodeId)) return;
@@ -211,6 +211,7 @@ function App() {
             // Update node styles
             const styledNodes = updateNodeStyles(layoutedElements.nodes);
             
+            //@ts-expect-error - setNodes expect the parsed type of the styledNodes
             setNodes(styledNodes);
             setEdges(layoutedElements.edges);
         },
@@ -222,6 +223,8 @@ function App() {
             // Re-layout the graph
             const layoutedElements = await getLayoutedElements(nodes, edges);
             const styledNodes = updateNodeStyles(layoutedElements.nodes);
+            
+            //@ts-expect-error - setNodes expect the parsed type of the styledNodes
             setNodes(styledNodes);
             setEdges(layoutedElements.edges);
         };
