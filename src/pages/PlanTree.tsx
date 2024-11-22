@@ -1,307 +1,313 @@
-
-import React, { useState, useCallback, useEffect } from "react";
-
-/* Open issue:
-https://github.com/xyflow/xyflow/issues/4825
-related to edge not showing up in the tree
-import {
-    ReactFlow,
-    ReactFlowProvider,
-    useNodesState,
-    useEdgesState,
-    Controls,
-    ControlButton,
-    MiniMap,
-    Background,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css"
-import { MagicWandIcon } from "@radix-ui/react-icons"
-*/
-import ELK, { LayoutOptions } from "elkjs/lib/elk.bundled.js";
+// App.js
+import React, { useState, useCallback, useEffect } from 'react';
 import ReactFlow, {
     ReactFlowProvider,
     MiniMap,
     Background,
-    useNodesState,
-    useEdgesState,
-    Edge,
-    Node,
-    Controls
-} from "reactflow";
-import "reactflow/dist/style.css";
+    Controls,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import ELK from 'elkjs/lib/elk.bundled.js';
 
-
-
-const elk = new ELK();
-
-// Testing set for the courses awaiting for the link to the backend
+// Initial data
 const initialCourseList = [
-    { id: "2", name: "Data Structures", prerequisites: ["1"], year: 1 },
-    { id: "3", name: "Algorithms", prerequisites: ["1"], year: 1 },
-    { id: "4", name: "Databases", prerequisites: ["2"], year: 2 },
-    { id: "5", name: "Operating Systems", prerequisites: ["2"], year: 2 },
-    { id: "7", name: "Operating Systems 2", prerequisites: ["5"], year: 3 },
-    { id: "6", name: "Databases 2", prerequisites: ["4"], year: 3 },
-    { id: "9", name: "Distributed Systems", prerequisites: ["5"], year: 3 },
-    { id: "10", name: "Coding", prerequisites: ["1"], year: 1 },
-    { id: "8", name: "Parallel Programming", prerequisites: ["10"], year: 3 }
+    { id: '2', name: 'Data Structures', prerequisites: ['1'], year: 1 },
+    { id: '3', name: 'Algorithms', prerequisites: ['1'], year: 1 },
+    { id: '4', name: 'Databases', prerequisites: ['2'], year: 2 },
+    { id: '5', name: 'Operating Systems', prerequisites: ['2'], year: 2 },
+    { id: '7', name: 'Operating Systems 2', prerequisites: ['5'], year: 3 },
+    { id: '6', name: 'Databases 2', prerequisites: ['4'], year: 3 },
+    { id: '9', name: 'Distributed Systems', prerequisites: ['5'], year: 3 },
+    { id: '10', name: 'Coding', prerequisites: ['1'], year: 1 },
+    { id: '8', name: 'Parallel Programming', prerequisites: ['10'], year: 3 },
 ];
+
+const undeletableNodes = ['1'];
 
 const initialNodes = [
-    { id: "1", type: "input", data: { label: "Program" }, position: { x: 250, y: 5 } },
+    {
+        id: '1',
+        type: 'input',
+        data: { label: 'Program' },
+        position: { x: 250, y: 5 }
+    },
 ];
 
-const initialEdges: Edge[] = [];
+const initialEdges = [];
 
-const getLayoutedElements = async (nodes: Node[], edges: Edge[], options: LayoutOptions) => {
-    const elkGraph = {
-        id: "root",
-        layoutOptions: options,
-        children: nodes.map((node) => ({
-            id: node.id,
-            width: 150,
-            height: 50,
-        })),
-        edges: edges.map((edge) => ({
-            id: edge.id,
-            sources: [edge.source],
-            targets: [edge.target],
-        })),
+// ELK instance
+const elk = new ELK();
+
+// Helper function to layout the nodes using ELK
+const getLayoutedElements = async (nodes, edges, options = {}) => {
+    const elkNodes = nodes.map((node) => ({
+        id: node.id,
+        width: 150,
+        height: 50,
+    }));
+
+    const elkEdges = edges.map((edge) => ({
+        id: edge.id,
+        sources: [edge.source],
+        targets: [edge.target],
+    }));
+
+    const layoutOptions = {
+        "elk.algorithm": "layered", // Layered algorithm for hierarchical layouts
+        "elk.direction": "DOWN", // Layout direction: top to bottom
+        "elk.layered.spacing.nodeNodeBetweenLayers": "50", // Spacing between layers
+        "elk.spacing.nodeNode": "25", // Spacing between nodes in the same layer
+        "elk.layered.spacing.nodeNodeBetweenConnectedNodes": "25", // Spacing between connected nodes
+        "elk.layered.considerModelOrder": "true", // Consider the model order
+        "elk.layered.crossingMinimization.semiInteractive": "true", // Minimize crossings
+        "elk.layered.thoroughness": "5", // Thoroughness level
     };
 
-    const layoutedGraph = await elk.layout(elkGraph);
+    const graph = {
+        id: 'root',
+        layoutOptions: layoutOptions,
+        children: elkNodes,
+        edges: elkEdges,
+    };
 
-    const updatedNodes = nodes.map((node) => {
-        const layoutedNode = layoutedGraph.children?.find((n) => n.id === node.id);
+    const layout = await elk.layout(graph);
+
+    const layoutedNodes = nodes.map((node) => {
+        const layoutNode = layout.children.find((n) => n.id === node.id);
         return {
             ...node,
             position: {
-                x: layoutedNode?.x ?? 0,
-                y: layoutedNode?.y ?? 0,
+                x: layoutNode.x,
+                y: layoutNode.y,
             },
-            draggable: true,
+            draggable: false, // Prevent manual dragging since we're using automatic layout
         };
     });
 
-    return { nodes: updatedNodes, edges };
+    return { nodes: layoutedNodes, edges };
 };
 
+function App() {
+    const [nodes, setNodes] = useState(initialNodes);
+    const [edges, setEdges] = useState(initialEdges);
+    const [courseList] = useState(initialCourseList);
 
-function PlanTree() {
-    const [treeNodes, setTreeNodes, onNodesChange] = useNodesState(initialNodes);
-    const [treeEdges, setTreeEdges, onEdgesChange] = useEdgesState(initialEdges);
-    const [courseList, _] = useState(initialCourseList);
+    // Function to check if a course is already in the tree
+    const isCourseInTree = useCallback(
+        (courseId) => nodes.some((node) => node.id === courseId),
+        [nodes]
+    );
 
-
-    const updateLayout = useCallback(async () => {
-
-        const layoutOptions = {
-            "elk.algorithm": "layered", // Layered algorithm for hierarchical layouts
-            "elk.direction": "DOWN", // Layout direction: top to bottom
-            "elk.layered.spacing.nodeNodeBetweenLayers": "100", // Spacing between layers
-            "elk.spacing.nodeNode": "50", // Spacing between nodes in the same layer
-            "elk.layered.spacing.nodeNodeBetweenConnectedNodes": "50", // Spacing between connected nodes
-            "elk.layered.considerModelOrder": "true", // Consider the model order
-            "elk.layered.crossingMinimization.semiInteractive": "true", // Minimize crossings
-            "elk.layered.thoroughness": "5", // Thoroughness level
-        };
-
-        const layouted = await getLayoutedElements(treeNodes, treeEdges, layoutOptions);
-        setTreeNodes(layouted.nodes);
-        setTreeEdges(layouted.edges);
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [treeNodes, treeEdges]);
-
-    const isCourseInTree = (courseId: string) => treeNodes.some((node) => node.id === courseId);
-
-    const updatePrerequisiteStatus = useCallback(() => {
-        // First update all nodes
-        setTreeNodes((currentNodes) =>
-            currentNodes.map((node) => {
-                const course = courseList.find((c) => c.id === node.id);
-                if (!course) return node;
-
-                const hasMissingPrerequisites = course.prerequisites.some(
-                    (prereqId) => !currentNodes.some((n) => n.id === prereqId)
-                );
-
-                return {
-                    ...node,
-                    data: {
-                        ...node.data,
-                        label: course.name,
-                        hasMissingPrerequisites,
-                    },
-                    style: hasMissingPrerequisites
-                        ? { backgroundColor: "red", color: "white" }
-                        : { backgroundColor: "#fff", color: "#000" },
-                };
-            })
-        );
-
-        // Then rebuild all edges
-        setTreeEdges(() => {
-            const newEdges: Edge[] = [];
-
-            // Loop through all nodes in the tree
-            treeNodes.forEach((node) => {
+    // Function to update node styles based on prerequisites
+    const updateNodeStyles = useCallback(
+        (nodesToUpdate) => {
+            return nodesToUpdate.map((node) => {
                 const course = courseList.find((c) => c.id === node.id);
                 if (course) {
-                    // Add edges for each prerequisite that exists in the tree
-                    course.prerequisites.forEach((prereqId) => {
-                        if (treeNodes.some(n => n.id === prereqId)) {
-                            newEdges.push({
-                                id: `e${prereqId}-${course.id}`,
-                                source: prereqId,
-                                target: course.id,
-                                animated: false,
-                                type: "smoothstep",
-                                style: { stroke: "black", strokeDasharray: 0, strokeWidth: 2 }
-                            });
-                        }
+                    const hasMissingPrerequisites = course.prerequisites.some(
+                        (preId) => !isCourseInTree(preId)
+                    );
+                    return {
+                        ...node,
+                        style: hasMissingPrerequisites
+                            ? { backgroundColor: 'red', color: 'white' }
+                            : { backgroundColor: '#fff', color: '#000' },
+                    };
+                }
+                return node;
+            });
+        },
+        [courseList, isCourseInTree]
+    );
+
+    // Function to handle drop event
+    const onDrop = useCallback(
+        async (event) => {
+            event.preventDefault();
+            const courseId = event.dataTransfer.getData('application/courseId');
+            const course = courseList.find((c) => c.id === courseId);
+
+            if (!course) return;
+
+            if (isCourseInTree(course.id)) {
+                alert('Course already in tree');
+                return;
+            }
+
+            const newNode = {
+                id: course.id,
+                data: { label: course.name },
+                position: { x: 0, y: 0 }, // Position will be updated by ELK
+            };
+
+            let newEdges = [...edges];
+
+            // Add edges to prerequisites if they exist
+            course.prerequisites.forEach((preId) => {
+                if (isCourseInTree(preId)) {
+                    newEdges.push({
+                        id: `e${preId}-${course.id}`,
+                        source: preId,
+                        target: course.id,
+                        animated: false,
+                        type: "smoothstep",
+                        style: { stroke: "black", strokeDasharray: 0, strokeWidth: 2 }
                     });
                 }
             });
 
-            return newEdges;
-        });
+            // Add edges from the course to its dependent nodes
+            nodes.forEach((node) => {
+                const nodeCourse = courseList.find((c) => c.id === node.id);
+                if (nodeCourse && nodeCourse.prerequisites.includes(course.id)) {
+                    newEdges.push({
+                        id: `e${course.id}-${node.id}`,
+                        source: course.id,
+                        target: node.id,
+                        animated: false,
+                        type: "smoothstep",
+                        style: { stroke: "black", strokeDasharray: 0, strokeWidth: 2 }
+                    });
+                }
+            });
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [courseList, treeNodes]);
+            // Update nodes and edges
+            let newNodes = [...nodes, newNode];
 
+            // Re-layout the graph
+            const layoutedElements = await getLayoutedElements(newNodes, newEdges);
 
-    // Add this new effect to handle edge updates
-    useEffect(() => {
-        updatePrerequisiteStatus();
-    }, [treeNodes, updatePrerequisiteStatus]);
+            // Update node styles
+            const styledNodes = updateNodeStyles(layoutedElements.nodes);
 
-    const removeCourseFromTree = useCallback((courseId: string) => {
-        setTreeNodes(function (nodes) {
-            // Remove the node, if and only if it's not root node(s)
-            const rootNodes = initialNodes.map(node => node.id);
-            // If the courseId is the on roots nodes, don't remove it
-            if (rootNodes.includes(courseId))
-                return nodes;
-            return nodes.filter((node) => node.id !== courseId);
-        })
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+            setNodes(styledNodes);
+            setEdges(layoutedElements.edges);
+        },
+        [nodes, edges, courseList, isCourseInTree, updateNodeStyles]
+    );
 
-    const onDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    // Function to handle drag over event
+    const onDragOver = (event) => {
         event.preventDefault();
-        event.dataTransfer.dropEffect = "move";
-    }, []);
-
-    const onDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        const courseId = event.dataTransfer.getData("application/courseId");
-        const course = courseList.find((c) => c.id === courseId);
-
-        if (course) {
-            // Get the drop position relative to the ReactFlow container
-            const reactFlowBounds = event.currentTarget.getBoundingClientRect();
-            const position = {
-                x: event.clientX - reactFlowBounds.left,
-                y: event.clientY - reactFlowBounds.top
-            };
-
-            const hasMissingPrerequisites = course.prerequisites.some(
-                (prereqId) => !isCourseInTree(prereqId)
-            );
-
-            const newNode = {
-                id: course.id,
-                data: {
-                    label: course.name,
-                    hasMissingPrerequisites,
-                },
-                position: position,
-                style: hasMissingPrerequisites
-                    ? { backgroundColor: "red", color: "white" }
-                    : { backgroundColor: "#fff", color: "#000" },
-                draggable: true,
-            };
-
-            setTreeNodes((nodes) => [...nodes, newNode]);
-
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [courseList, isCourseInTree]);
-
-    const fitViewOptions = {
-        padding: 0.3,
-        includeHiddenNodes: false,
-        maxZoom: 2,
-        minZoom: 0.5
+        event.dataTransfer.dropEffect = 'move';
     };
 
+    // Function to handle node deletion
+    const onNodeClick = useCallback(
+        async (event, node) => {
+
+            const nodeId = node.id;
+
+            if (undeletableNodes.includes(nodeId)) return;
+            
+
+            const childEdges = edges.filter((edge) => edge.source === nodeId);
+            const childNodeIds = childEdges.map((edge) => edge.target);
+
+            if (childNodeIds.length === 0) {
+                // Remove node and connected edges
+                const newNodes = nodes.filter((n) => n.id !== nodeId);
+                const newEdges = edges.filter(
+                    (e) => e.source !== nodeId && e.target !== nodeId
+                );
+
+                // Re-layout the graph
+                const layoutedElements = await getLayoutedElements(newNodes, newEdges);
+
+                // Update node styles
+                const styledNodes = updateNodeStyles(layoutedElements.nodes);
+
+                setNodes(styledNodes);
+                setEdges(layoutedElements.edges);
+            } else {
+                // Color child nodes red
+                const updatedNodes = nodes.map((n) =>
+                    childNodeIds.includes(n.id)
+                        ? { ...n, style: { backgroundColor: 'red', color: 'white' } }
+                        : n
+                );
+                setNodes(updatedNodes);
+            }
+        },
+        [nodes, edges, updateNodeStyles]
+    );
+    // Update node styles when nodes or edges change
+    useEffect(() => {
+        const updateStyles = async () => {
+            // Re-layout the graph
+            const layoutedElements = await getLayoutedElements(nodes, edges);
+            const styledNodes = updateNodeStyles(layoutedElements.nodes);
+            setNodes(styledNodes);
+            setEdges(layoutedElements.edges);
+        };
+        updateStyles();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [edges]);
 
     return (
-        <div className="flex flex-row max-h-full max-w-full">
-            <div id="main-content" className="w-full flex flex-col">
-                <header id="top-buttons" className="m-8 flex items-center justify-between">
-                    <button id="user-identifier" className="bg-neutral-300 rounded-2xl text-2xl p-4">User</button>
-                    <button id="notifications-button" className="bg-neutral-300 rounded-2xl text-2xl p-4">Notifications</button>
-                </header>
-                <main id="plan-tree" className="bg-neutral-300 rounded-3xl p-4 m-8">
-                    <div style={{ display: "flex", height: "100vh" }}>
-                        <div style={{ flex: 3, borderRight: "1px solid #ccc", padding: "10px" }}>
-                            <h3>Programme Tree</h3>
-                            <ReactFlowProvider>
-                                <ReactFlow
-                                    nodes={treeNodes}
-                                    edges={treeEdges}
-                                    fitView
-                                    onNodesChange={onNodesChange}
-                                    onEdgesChange={onEdgesChange}
-                                    onNodeClick={(_, node) => removeCourseFromTree(node.id)}
-                                    onDragOver={onDragOver}
-                                    onDrop={onDrop}
-                                >
-                                    <MiniMap position="top-right" />
-                                    <Controls position="top-left"
-                                        onFitView={updateLayout}
-                                        showInteractive={false}
-                                        fitViewOptions={fitViewOptions} >
-                                    </Controls>
-                                    <Background />
-                                </ReactFlow>
-                            </ReactFlowProvider>
-                        </div>
+        <div style={{ display: 'flex', height: '100vh' }}>
+            
 
-                        <div style={{ flex: 1, padding: "10px" }}>
-                            <h3>Available Courses</h3>
-                            <ul>
-                                {courseList.map((course) => (
-                                    <li key={course.id} style={{ marginBottom: "8px" }}>
-                                        <div
-                                            draggable={(!isCourseInTree(course.id))}
-                                            onDragStart={(e) => {
-                                                e.dataTransfer.setData("application/courseId", course.id);
-                                                e.dataTransfer.effectAllowed = "move";
-                                            }}
-                                            style={{
-                                                padding: "6px 12px",
-                                                backgroundColor: isCourseInTree(course.id) ? "#ddd" : "#4CAF50",
-                                                color: isCourseInTree(course.id) ? "#666" : "white",
-                                                cursor: isCourseInTree(course.id) ? "not-allowed" : "grab",
-                                                border: "none",
-                                                borderRadius: "4px",
-                                                userSelect: "none",
-                                            }}
-                                        >
-                                            {course.name} {isCourseInTree(course.id) && "(In Tree)"}
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+            {/* React Flow Canvas */}
+            <div style={{ flexGrow: 1 }}>
+                <ReactFlowProvider>
+                    <div
+                        style={{ width: '100%', height: '100%' }}
+                        onDrop={onDrop}
+                        onDragOver={onDragOver}
+                    >
+                        <ReactFlow
+                            nodes={nodes}
+                            edges={edges}
+                            onNodeClick={onNodeClick}
+                            nodesDraggable={true} // Ensure this is set to true
+                            onDragOver={onDragOver}
+                            onDrop={onDrop}
+                            fitView
+                        >
+                            <MiniMap position="top-right" />
+                            <Controls position="top-left"
+                                showInteractive={false} />
+                            <Background />
+                        </ReactFlow>
                     </div>
-                </main>
+                </ReactFlowProvider>
             </div>
+            {/* Sidebar */}
+            <div style={{ width: '200px', padding: '10px', borderLeft: '1px solid #ccc' }}>
+                <h3>Available Courses</h3>
+                <ul style={{ listStyle: 'none', padding: 0 }}>
+                    {courseList.map((course) => (
+                        <li key={course.id} style={{ marginBottom: '8px' }}>
+                            <div
+                                draggable={!isCourseInTree(course.id)}
+                                onDragStart={(e) => {
+                                    e.dataTransfer.setData('application/courseId', course.id);
+                                    e.dataTransfer.effectAllowed = 'move';
+                                }}
+                                style={{
+                                    padding: '6px 12px',
+                                    backgroundColor: isCourseInTree(course.id) ? '#ddd' : '#4CAF50',
+                                    color: isCourseInTree(course.id) ? '#666' : 'white',
+                                    cursor: isCourseInTree(course.id) ? 'not-allowed' : 'grab',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    userSelect: 'none',
+                                }}
+                            >
+                                <p>
+                                    {course.name}
+                                </p>
+                                <p> {isCourseInTree(course.id) && '(In Tree)'} </p>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+
         </div>
     );
 }
 
-export default PlanTree;
+export default App;
