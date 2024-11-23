@@ -2,8 +2,11 @@
 import React, { useState, useCallback, useEffect } from "react";
 
 import ELK from "elkjs/lib/elk.bundled.js";
-import ReactFlow, { ReactFlowProvider,MiniMap,Background, Controls, Node, Edge} from "reactflow";
+
 import { useSearchParams } from "react-router-dom";
+
+import ReactFlow, { ReactFlowProvider,MiniMap,Background, Controls, Node, Edge} from "reactflow";
+
 import { getAllProgrammes, getAllCourses } from "~/api";
 
 import "reactflow/dist/style.css";
@@ -27,7 +30,6 @@ interface Course {
     name: string;
     courses: Course[];
   }
-
 
 const undeletableNodes = ["1"];
 
@@ -95,7 +97,6 @@ function App() {
     const [courseList, setCourses] = useState<Course[]>([]);
     const [totalCredits,setTotalCredits] = useState<number>(0);
     const [searchParams] = useSearchParams();
-    const [error, setError] = useState<string | null>(null);
     const [structure, setStructure] = useState<ProgrammeStructure | null>(null);
 
     const programmeId = searchParams.get("programmeId");
@@ -105,7 +106,6 @@ function App() {
         const fetchStructure = async () => {
           try {
             if (!programmeId) {
-                setError("Programme ID is missing");
                 return;
             }
             const programmes = await getAllProgrammes();
@@ -114,7 +114,6 @@ function App() {
             const programmeSelected = programmes.find((p) => p.id === programmeId);
 
             if(!programmeSelected){
-                setError("Programme was not found");
                 return;
             }
 
@@ -127,7 +126,6 @@ function App() {
                 return course;
                 }); 
             setCourses(programmeCourses);
-            console.log(programmeCourses);
 
             const programmeStructure: ProgrammeStructure = {
                 program_id: programmeSelected.id,
@@ -136,9 +134,8 @@ function App() {
               };            
           setStructure(programmeStructure);
 
-          } catch (err) {
-            setError("Failed to load programme structure");
-            console.error("Error fetching the programme structure:", error);
+          } catch (error) {
+            return;
           }
         };
         fetchStructure();
@@ -161,6 +158,7 @@ function App() {
     useEffect(() => {
         if (!structure) return;
         const newTotalCredits = nodes.reduce((total, node) => {
+            // @ts-ignore: Ignore unsafe member access error for credits
             const credits = node.data?.credits;
         
             if (credits && !isNaN(credits)) {
