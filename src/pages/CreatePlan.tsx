@@ -86,7 +86,12 @@ function CreatePlan() {
     }, [selectedProgramme, courses, programmes]);
 
     const handleProgramTreeClick = () => {
-        window.location.href = "/plantree";
+        if (selectedProgramme) {
+            window.location.href = `/plantree?programmeId=${selectedProgramme}`;
+        }
+        else {
+            alert("Please select a programme first.");
+        }
     };
 
     const handleCourseSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
