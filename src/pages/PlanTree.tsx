@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from "react";
 
 import ELK from "elkjs/lib/elk.bundled.js";
@@ -18,6 +17,47 @@ const initialCourseList = [
     { id: "10", name: "Coding", prerequisites: ["1"], year: 1, hasMissingPrerequisites: false },
     { id: "8", name: "Parallel Programming", prerequisites: ["10"], year: 3, hasMissingPrerequisites: false },
 ];
+
+const generateRandomColor = () => {
+    let color: string;
+    
+    do {
+        // Generate random hex color
+        color = "#" + Math.floor(Math.random()*16777215).toString(16);
+        
+        // Ensure the color is 6 characters long (if not, pad with zeros)
+        while (color.length < 7) {
+            color = "#" + "0" + color.slice(1);
+        }
+    } while (isRedTone(color)); // Keep generating if it's a red tone
+    
+    return color;
+};
+
+const isRedTone = (color: string): boolean => {
+    const r = parseInt(color.slice(1, 3), 16); // Extract red component
+    const g = parseInt(color.slice(3, 5), 16); // Extract green component
+    const b = parseInt(color.slice(5, 7), 16); // Extract blue component
+
+    // Define thresholds to consider a color as a red tone
+    return r > g && r > b; // Red component should be the largest
+};
+
+let yearColors: { [key: number]: string } = {};
+
+// Helper function to get the color for each year, ensuring it's unique
+const getYearColor = (year: number): string => {
+    if (!yearColors[year]) {
+        let newColor;
+        // Generate a random color until it's unique
+        do {
+            newColor = generateRandomColor();
+        } while (Object.values(yearColors).includes(newColor)); // Check if color is already in use
+        yearColors[year] = newColor;
+    }
+    return yearColors[year];
+};
+
 
 const undeletableNodes = ["1"];
 
@@ -109,11 +149,17 @@ function App() {
                     const hasMissingPrerequisites = course.prerequisites.some(
                         (preId) => !isCourseInTree(preId) || course.hasMissingPrerequisites
                     );
+
+                    const yearColor = getYearColor(course.year);
+
                     return {
                         ...node,
-                        style: hasMissingPrerequisites
-                            ? { backgroundColor: "red", color: "white" }
-                            : { backgroundColor: "#fff", color: "#000" },
+                        style: {
+                            backgroundColor: hasMissingPrerequisites
+                                ? "red"
+                                : yearColor, // Use the color for the year
+                            color: hasMissingPrerequisites ? "white" : "#000",
+                        },
                     };
                 }
                 return node;
