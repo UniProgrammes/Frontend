@@ -2,9 +2,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 
 import ELK from "elkjs/lib/elk.bundled.js";
-
 import { useSearchParams } from "react-router-dom";
-
 import ReactFlow, { ReactFlowProvider,MiniMap,Background, Controls, Node, Edge} from "reactflow";
 
 import { getAllProgrammes, getAllCourses } from "~/api";
@@ -104,7 +102,6 @@ function App() {
       
     useEffect(() => {
         const fetchStructure = async () => {
-          try {
             if (!programmeId) {
                 return;
             }
@@ -133,10 +130,6 @@ function App() {
                 courses: programmeCourses,
               };            
           setStructure(programmeStructure);
-
-          } catch (error) {
-            return;
-          }
         };
         fetchStructure();
       }, [programmeId]);
@@ -158,7 +151,7 @@ function App() {
     useEffect(() => {
         if (!structure) return;
         const newTotalCredits = nodes.reduce((total, node) => {
-            // @ts-ignore: Ignore unsafe member access error for credits
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             const credits = node.data?.credits;
         
             if (credits && !isNaN(credits)) {
