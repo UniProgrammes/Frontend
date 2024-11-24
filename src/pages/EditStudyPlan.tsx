@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { useParams } from "wouter";
@@ -81,13 +81,11 @@ function EditStudyPlan() {
             setStudyPlanName(studyPlan ? studyPlan.name : "");
             const fetchedCourses = await getCoursesFromStudyPlan(id);
             setSelectedCourses(fetchedCourses.data);
-            console.log(fetchedCourses.data);
-            console.log(coursesToDelete);
         }
 
         loadStudyPlanInfo();
 
-    }, [id])
+    }, [id, studyPlan])
 
     const handleProgramTreeClick = () => {
         window.location.href = "/plantree";
@@ -113,18 +111,17 @@ function EditStudyPlan() {
         if(!coursesToDelete.includes(courseId)){
             setCoursesToDelete([...coursesToDelete, courseId]);
         }
-        console.log(coursesToDelete);
     };
 
     const handleUpdateStudyPlan = () => {
         async function updatePlan() {
             await updateStudyPlan(id, {name: studyPlanName ? studyPlanName : ""});
             if(coursesToDelete.length > 0) {
-                await deleteCoursesFromStudyPlan(studyPlan  , {courses_ids: coursesToDelete});
+                await deleteCoursesFromStudyPlan(studyPlan!, {courses_ids: coursesToDelete});
             }
 
             if(coursesToAdd.length > 0) {
-                await addCoursesToStudyPlan(studyPlan, {courses: coursesToAdd});
+                await addCoursesToStudyPlan(studyPlan!, {courses: coursesToAdd});
             }
 
             navigate(`/study-plan/${studyPlan?.id}`);
