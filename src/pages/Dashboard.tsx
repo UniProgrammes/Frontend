@@ -36,6 +36,7 @@ function Dashboard() {
                         <div  id="study-plan" className="flex space-x-8 p-4">
                             {studyPlans.map((studyPlan) => (
                                 <StudyPlanCard
+                                    key={studyPlan.id}
                                     id={studyPlan.id}
                                     name={studyPlan.name}
                                     completed={studyPlan.status !== "draft"}
@@ -46,7 +47,7 @@ function Dashboard() {
                         </div>
                     ) : (
                         <p className="text-2xl text-gray-600 text-center m-36">
-                            You don't have any study plan yet
+                            You don't have any study plans yet
                         </p>
                     )}
                 </main>
