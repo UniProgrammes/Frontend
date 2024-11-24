@@ -4,7 +4,7 @@ import CreatePlan from "~/pages/CreatePlan";
 import Dashboard from "~/pages/Dashboard";
 import EditStudyPlan from "~/pages/EditStudyPlan";
 import Home from "~/pages/Home";
-//import PlanTree from "~/pages/PlanTree";
+import PlanTree from "~/pages/PlanTree";
 //import TestBackendConnection from "~/pages/TestBackendConnection";
 import Profile from "~/pages/Profile";
 import ViewProgramme from "~/pages/ViewProgramme";
@@ -22,11 +22,11 @@ const routes: RouterItem[] = [
     path: "/createplan",
     component: <CreatePlan />,
   },
-  // {
-  //   title: "Plan Tree",
-  //   path: "/plantree",
-  //   component: <PlanTree />,
-  // },
+  {
+    title: "Plan Tree",
+    path: "/plantree",
+    component: <PlanTree />,
+  },
   {
     title: "Dasboard",
     path: "/dashboard",
