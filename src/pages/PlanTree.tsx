@@ -459,20 +459,11 @@ function App() {
 
     const removeAllCourses = useCallback(async () => {
         // Keep only the root node
-        const newNodes: Node[] = [...nodes];
-        const newEdges: Edge[] = [];
+        const initialNodes: Node[] = nodes.filter(s => s.id == "1");
+        setNodes(initialNodes);
+        setEdges([]);
 
-        // Re-layout the graph
-        const layoutedElements = await getLayoutedElements(newNodes, newEdges);
-
-        // Update node styles
-        const styledNodes = updateNodeStyles(layoutedElements.nodes);
-
-        //@ts-expect-error - setNodes expect the parsed type of the styledNodes
-        setNodes(styledNodes);
-        setEdges(layoutedElements.edges);
-
-    }, [nodes, updateNodeStyles]);
+    }, [nodes]);
 
     return (
         <div style={{ display: "flex", height: "100vh" }}>
