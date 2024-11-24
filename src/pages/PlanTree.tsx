@@ -3,24 +3,32 @@ import React, { useState, useCallback, useEffect } from "react";
 
 import { TrashIcon } from "@radix-ui/react-icons";
 import ELK from "elkjs/lib/elk.bundled.js";
+import { useSearchParams } from "react-router-dom";
 import ReactFlow, { ReactFlowProvider, MiniMap, Background, Controls, ControlButton, NodeMouseHandler, Node, Edge} from "reactflow";
+
+import { getAllProgrammes, getAllCourses } from "~/api";
 
 import "reactflow/dist/style.css";
 
-// Initial data
-const initialCourseList = [
-    { id: "2", name: "Data Structures", prerequisites: ["1"], year: 1, hasMissingPrerequisites: false },
-    { id: "3", name: "Algorithms", prerequisites: ["1"], year: 1, hasMissingPrerequisites: false },
-    { id: "4", name: "Databases", prerequisites: ["2"], year: 2, hasMissingPrerequisites: false },
-    { id: "5", name: "Operating Systems", prerequisites: ["2"], year: 2, hasMissingPrerequisites: false },
-    { id: "7", name: "Operating Systems 2", prerequisites: ["5"], year: 3, hasMissingPrerequisites: false },
-    { id: "6", name: "Databases 2", prerequisites: ["4"], year: 3, hasMissingPrerequisites: false },
-    { id: "9", name: "Distributed Systems", prerequisites: ["5"], year: 4, hasMissingPrerequisites: false },
-    { id: "10", name: "Coding", prerequisites: ["1"], year: 1, hasMissingPrerequisites: false },
-    { id: "8", name: "Parallel Programming", prerequisites: ["10"], year: 5, hasMissingPrerequisites: false },
-];
-
-const years: number[] = [... new Set(initialCourseList.map((course) => course.year))]
+interface Course {
+    id: string;
+    created_at: string;
+    updated_at: string;
+    name: string;
+    code: string;
+    credits: string;
+    educational_level: string;
+    description: string;
+    main_area: string;
+    learning_outcomes: string[];
+    prerequisites: string[];
+  }
+  
+  interface ProgrammeStructure {
+    program_id: string;
+    name: string;
+    courses: Course[];
+  }
 
 const pastelColors = [
     "hsl(210, 60%, 50%)", // Light Blue
@@ -52,16 +60,6 @@ interface CourseInfo {
 
 const undeletableNodes = ["1"];
 
-const initialNodes = [
-    {
-        id: "1",
-        type: "input",
-        data: { label: "Program" },
-        position: { x: 250, y: 5 }
-    },
-];
-
-const initialEdges: Edge[] | (() => Edge[]) = [];
 
 // ELK instance
 const elk = new ELK();
@@ -124,10 +122,78 @@ const getLayoutedElements = async (nodes: Node[], edges: Edge[], direction = "DO
 };
 
 function App() {
-    const [nodes, setNodes] = useState(initialNodes);
-    const [edges, setEdges] = useState(initialEdges);
-    const [courseList] = useState(initialCourseList);
+    const [nodes, setNodes] = useState<Node[]>([]);
+    const [edges, setEdges] = useState<Edge[]>([]);
+    const [courseList, setCourses] = useState<Course[]>([]);
+    const [totalCredits,setTotalCredits] = useState<number>(0);
+    const [searchParams] = useSearchParams();
+    const [structure, setStructure] = useState<ProgrammeStructure | null>(null);
     const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
+
+    const programmeId = searchParams.get("programmeId");
+
+      
+    useEffect(() => {
+        const fetchStructure = async () => {
+            if (!programmeId) {
+                return;
+            }
+            const programmes = await getAllProgrammes();
+            const courses = await getAllCourses();
+
+            const programmeSelected = programmes.find((p) => p.id === programmeId);
+
+            if(!programmeSelected){
+                return;
+            }
+
+            const programmeCourses = courses.filter((course) =>
+                programmeSelected.courses.includes(course.id))
+                .map((course) => {
+                if (course.prerequisites.length === 0) {
+                    course.prerequisites.push("1");
+                }
+                return course;
+                }); 
+            setCourses(programmeCourses);
+
+            const programmeStructure: ProgrammeStructure = {
+                program_id: programmeSelected.id,
+                name: programmeSelected.name,
+                courses: programmeCourses,
+              };            
+          setStructure(programmeStructure);
+        };
+        fetchStructure();
+      }, [programmeId]);
+
+    useEffect(() => {
+        if (!structure) return;
+        const newNodes: Node[] = [
+            { id: "1", type: "input", data: { label: structure.name, credits: "0"}, position: { x: 250, y: 5 } },
+        ];
+
+        const newEdges: Edge[] = [];
+
+        getLayoutedElements(newNodes, newEdges).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
+            setNodes(layoutedNodes);
+            setEdges(layoutedEdges);
+        });
+    }, [structure]);
+
+    useEffect(() => {
+        if (!structure) return;
+        const newTotalCredits = nodes.reduce((total, node) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            const credits = node.data?.credits;
+        
+            if (credits && !isNaN(credits)) {
+              return total + parseFloat(credits); 
+            }
+            return total;
+          }, 0);
+        setTotalCredits(newTotalCredits);
+    }, [structure, nodes]);
 
     // Handle mouse enter to show the popup
     const onNodeMouseEnter: NodeMouseHandler = useCallback((event, node: Node) => {
@@ -175,7 +241,7 @@ function App() {
                 const course = courseList.find((c) => c.id === node.id);
                 if (course) {
                     const hasMissingPrerequisites = course.prerequisites.some(
-                        (preId) => !isCourseInTree(preId) || course.hasMissingPrerequisites
+                        (preId) => !isCourseInTree(preId) || false
                     );
                     return {
                         ...node,
@@ -206,13 +272,7 @@ function App() {
 
             const newNode = {
                 id: course.id,
-                data: 
-                {
-                   label: course.name,
-                   year: course.year,
-                   description: "",
-                   ects: "7.5"     
-                },
+                data: { label: course.name , credits: course.credits},
                 position: { x: 0, y: 0 }, // Position will be updated by ELK
             };
 
@@ -464,6 +524,10 @@ function App() {
                     style={{borderBottom: "1px solid black "}}>
                     Available Courses
                 </h3>
+
+                <div style={{ marginTop: "auto", padding: "10px", backgroundColor: "#f4f4f4", borderTop: "1px solid #ccc" }}>
+                    <h4>Total Credits in the tree: {totalCredits}</h4>
+                </div>
 
                 {/* Scrollable List */}
                 <ul className="list-none p-0 flex-1 overflow-y-auto m-0">
