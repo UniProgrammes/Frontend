@@ -22,6 +22,7 @@ interface Course {
     main_area: string;
     learning_outcomes: string[];
     prerequisites: string[];
+    year: number;
   }
   
   interface ProgrammeStructure {
@@ -41,6 +42,8 @@ const pastelColors = [
     "hsl(300, 60%, 50%)"  // Lavender
 ];
 
+const years = [1, 2, 3, 4, 5, 6, 7, 8];
+
 const colorMapping: Map<number, string> = new Map(
     years.map((year, index) => [year, pastelColors[index % pastelColors.length]])
 );
@@ -59,7 +62,6 @@ interface CourseInfo {
 }
 
 const undeletableNodes = ["1"];
-
 
 // ELK instance
 const elk = new ELK();
@@ -139,7 +141,12 @@ function App() {
                 return;
             }
             const programmes = await getAllProgrammes();
-            const courses = await getAllCourses();
+            const courses = await getAllCourses().then((courses: Course[]) => {
+                const sortedCourses = courses.sort(
+                    (a, b) => a.prerequisites.length - b.prerequisites.length
+                );
+                return sortedCourses;
+            })
 
             const programmeSelected = programmes.find((p) => p.id === programmeId);
 
@@ -153,6 +160,18 @@ function App() {
                 if (course.prerequisites.length === 0) {
                     course.prerequisites.push("1");
                 }
+                if (course.year === undefined) {
+                    //Just to handle the course year for the moment
+                    if (course.prerequisites.includes("1")){
+                        course.year = 1;
+                    }else{
+                        const prerequisiteCourse = courses.find((c) => c.id === course.prerequisites[0]);
+                        if (prerequisiteCourse) {
+                            course.year = (prerequisiteCourse?.year || 0) + 1;
+                        }
+                    }
+                }
+
                 return course;
                 }); 
             setCourses(programmeCourses);
@@ -210,9 +229,10 @@ function App() {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             label: node.data.label,
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            year: node.data.year.toString(),
+            year: node.data.year?.toString(),
             description: "",
-            ects: "7.5"
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            ects: node.data?.credits || "7.5",
         };
 
         const popupInfo: PopupInfo = {
@@ -267,12 +287,12 @@ function App() {
 
             if (isCourseInTree(course.id)) {
                 alert("Course already in tree");
-                return;
+                return;  
             }
 
             const newNode = {
                 id: course.id,
-                data: { label: course.name , credits: course.credits},
+                data: { label: course.name , credits: course.credits, year: course.year },
                 position: { x: 0, y: 0 }, // Position will be updated by ELK
             };
 
@@ -439,7 +459,7 @@ function App() {
 
     const removeAllCourses = useCallback(async () => {
         // Keep only the root node
-        const newNodes: Node[] = [...initialNodes];
+        const newNodes: Node[] = [...nodes];
         const newEdges: Edge[] = [];
 
         // Re-layout the graph
@@ -452,7 +472,7 @@ function App() {
         setNodes(styledNodes);
         setEdges(layoutedElements.edges);
 
-    }, [updateNodeStyles]);
+    }, [nodes, updateNodeStyles]);
 
     return (
         <div style={{ display: "flex", height: "100vh" }}>
@@ -516,18 +536,15 @@ function App() {
 
             </div>
             {/* Sidebar */}
-            <div
-                className="bg-grey-300 h-screen flex flex-col border-l border-gray-300 w-[250px]"
-            >
-                <h3
-                    className="block w-full p-4 mb-4 text-center uppercase"
-                    style={{borderBottom: "1px solid black "}}>
-                    Available Courses
-                </h3>
-
-                <div style={{ marginTop: "auto", padding: "10px", backgroundColor: "#f4f4f4", borderTop: "1px solid #ccc" }}>
-                    <h4>Total Credits in the tree: {totalCredits}</h4>
+            <div className="bg-grey-300 h-screen flex flex-col border-l border-gray-300 w-[250px]">
+                <div className="block w-full p-4 mb-4 text-center uppercase" style={{ borderBottom: "1px solid black " }}>
+                    <h2 className="block w-full font-bold p-1 text-center uppercase" style={{ borderBottom: "1px solid gray " }}>
+                        Available Courses
+                    </h2>
+                    <h4 className="block w-full pt-2">Total Credits in the tree:</h4>
+                    <h5 className="font-bold">{totalCredits}</h5>
                 </div>
+
 
                 {/* Scrollable List */}
                 <ul className="list-none p-0 flex-1 overflow-y-auto m-0">
