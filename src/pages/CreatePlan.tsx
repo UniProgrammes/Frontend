@@ -214,7 +214,7 @@ function CreatePlan() {
                                     Create your study plan
                                 </h1> 
                                 <button 
-                                    className="block text-xl w-auto m-4 h-10 text-left p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
+                                    className="block text-xl w-auto m-4 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
                                     disabled={selectedCourses.length === 0}
                                     onClick={handleCreateStudyPlan}
                                 >
@@ -231,7 +231,7 @@ function CreatePlan() {
                                 <h1 className="text-2xl text-black">Selected Courses</h1> 
                                 <button 
                                     onClick={handleProgramTreeClick} 
-                                    className="block text-xl w-1/3 m-4 h-10 text-left p-2 rounded-lg text-white text-center text-bold bg-purple-600"
+                                    className="block text-xl w-1/3 m-4 h-10 p-2 rounded-lg text-white text-center text-bold bg-purple-600"
                                     disabled={!selectedProgramme}
                                 >
                                     See Programme Tree
