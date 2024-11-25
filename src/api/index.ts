@@ -26,7 +26,7 @@ interface LoginResponse {
 }
 
 // Types for programmes and courses
-interface Programme {
+export interface Programme {
   id: string;
   created_at: string;
   updated_at: string;
@@ -43,7 +43,7 @@ interface ProgrammeResponse {
   results: Programme[];
 }
 
-interface Course {
+export interface Course {
   id: string;
   created_at: string;
   updated_at: string;
@@ -75,7 +75,7 @@ export interface StudyPlanGetResponse {
   results: StudyPlan[];
 }
 
-interface CourseListPost {
+export interface CourseListPost {
     id: string;
     semester: number;
 }
@@ -128,17 +128,37 @@ export const getAllCourses = async () => {
 };
 
 export const getAllStudyPlans = async () => {
-  const response = await client.get<StudyPlanGetResponse>("/v1/study-plans");
+  const response = await client.get<StudyPlanGetResponse>("/v1/study-plans/");
   return response.data.results;
 };
 
-export const saveStudyPlan = async (studyPlan: {name: string}) => {
-  const response = await client.post<StudyPlan>("/v1/study-plans/", studyPlan);
-  //console.log(response.data);
+export const getStudyPlan = async (studyPlanId: string) => {
+  const response = await client.get<StudyPlan>(`/v1/study-plans/${studyPlanId}/`);
+  return response.data;
+}
+
+export const saveStudyPlan = async (studyPlanName: {name: string}) => {
+  const response = await client.post<StudyPlan>("/v1/study-plans/", studyPlanName);
   return response.data;
 };
 
+export const getCoursesFromStudyPlan = async (studyPlanId: string) => {
+  const response = await client.get<Course[]>(`/v1/study-plans/${studyPlanId}/courses/`);
+  return response;
+}
+
 export const addCoursesToStudyPlan = async (studyPlan: StudyPlan, courses: {courses: CourseListPost[]}) => {
+  const response = await client.post(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return response.data;
+}
+
+export const updateStudyPlan = async (studyPlanId: string, studyPlanName: {name: string}) => {
+  const response = await client.patch<StudyPlan>(`/v1/study-plans/${studyPlanId}/`, studyPlanName);
+  return response.data;
+};
+
+export const deleteCoursesFromStudyPlan = async (studyPlan: StudyPlan, courses: {courses_ids: string[]}) => {
   const response = await client.post(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return response.data;

@@ -1,40 +1,29 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan } from "~/api";
+import { useNavigate } from "react-router-dom";
+import { useParams } from "wouter";
+
+import { RouteParams } from "./ViewStudyPlan";
+
+import { addCoursesToStudyPlan, Course, CourseListPost, deleteCoursesFromStudyPlan, getAllCourses, getAllProgrammes, getCoursesFromStudyPlan, getStudyPlan, Programme, StudyPlan, updateStudyPlan } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
-interface Programme {
-  id: string;
-  name: string;
-  degree_type: string;
-  credits: string;
-  created_at: string;
-  updated_at: string;
-  courses: string[];
-}
 
-interface Course {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  name: string;
-  code: string;
-  credits: string;
-  educational_level: string;
-  description: string;
-  main_area: string;
-  learning_outcomes: string[];
-  prerequisites: string[];
-}
 
-function CreatePlan() {
+function EditStudyPlan() {
+    const { id } = useParams<RouteParams>();
+    const navigate = useNavigate();
     const [programmes, setProgrammes] = useState<Programme[]>([]);
     const [courses, setCourses] = useState<Course[]>([]);
     const [selectedCourses, setSelectedCourses] = useState<Course[]>([]);
     const [selectedProgramme, setSelectedProgramme] = useState<string>("");
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [coursesToAdd, setCoursesToAdd] = useState<CourseListPost[]>([]);
+    const [coursesToDelete, setCoursesToDelete] = useState<string[]>([]);
+    const [studyPlan, setStudyPlan] = useState<StudyPlan>();
+    const [studyPlanName, setStudyPlanName] = useState<string>("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -85,13 +74,21 @@ function CreatePlan() {
         }
     }, [selectedProgramme, courses, programmes]);
 
+    useEffect(() => {
+        async function loadStudyPlanInfo() {
+            const res = await getStudyPlan(id);
+            setStudyPlan(res);
+            setStudyPlanName(studyPlan ? studyPlan.name : "");
+            const fetchedCourses = await getCoursesFromStudyPlan(id);
+            setSelectedCourses(fetchedCourses.data);
+        }
+
+        loadStudyPlanInfo();
+
+    }, [id, studyPlan])
+
     const handleProgramTreeClick = () => {
-        if (selectedProgramme) {
-            window.location.href = `/plantree?programmeId=${selectedProgramme}`;
-        }
-        else {
-            alert("Please select a programme first.");
-        }
+        window.location.href = "/plantree";
     };
 
     const handleCourseSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -100,29 +97,41 @@ function CreatePlan() {
         if (selectedCourse && !selectedCourses.some(course => course.id === courseId)) {
             setSelectedCourses([...selectedCourses, selectedCourse]);
         }
-    };
 
-    const handleRemoveCourse = (courseCode: string) => {
-        setSelectedCourses(prevCourses => 
-            prevCourses.filter(course => course.code !== courseCode)
-        );
-    };
-
-    const handleCreateStudyPlan = () => {
-        async function savePlan() {
-            const body = {name: "New study plan 1"};
-            const studyPlan = await saveStudyPlan(body);
-
-            const bodyRequest = selectedCourses.map((c) => {
-                return {
-                    id: c.id,
-                    semester: 2
-                }
-            });
-
-            addCoursesToStudyPlan(studyPlan, {courses: bodyRequest});
+        if(!selectedCourses.map((course) => course.id).includes(courseId)) {
+            setCoursesToAdd([...coursesToAdd, {id: courseId, semester: 2}])
         }
-        savePlan();
+    };
+
+    const handleRemoveCourse = (courseId: string) => {
+        setSelectedCourses(prevCourses => 
+            prevCourses.filter(course => course.id !== courseId)
+        );
+
+        if(!coursesToDelete.includes(courseId)){
+            setCoursesToDelete([...coursesToDelete, courseId]);
+        }
+    };
+
+    const handleUpdateStudyPlan = () => {
+        async function updatePlan() {
+            await updateStudyPlan(id, {name: studyPlanName ? studyPlanName : ""});
+            if(coursesToDelete.length > 0) {
+                await deleteCoursesFromStudyPlan(studyPlan!, {courses_ids: coursesToDelete});
+            }
+
+            if(coursesToAdd.length > 0) {
+                await addCoursesToStudyPlan(studyPlan!, {courses: coursesToAdd});
+            }
+
+            navigate(`/study-plan/${studyPlan?.id}`);
+        }
+
+        updatePlan();
+    }
+
+    const handleChangeName = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setStudyPlanName(e.target.value);
     }
 
     const renderProgrammeSelect = () => (
@@ -189,7 +198,7 @@ function CreatePlan() {
                         code={course.code}
                         educational_level={course.educational_level}
                         description={course.description}
-                        onRemove={() => handleRemoveCourse(course.code)}
+                        onRemove={() => handleRemoveCourse(course.id)}
                     />
                 ))
             ) : (
@@ -216,14 +225,24 @@ function CreatePlan() {
                         <>
                             <div id="header" className="flex items-center justify-between bg-neutral-300 rounded-xl h-16 p-2 m-8">
                                 <h1 className="p-8 pl-4 text-4xl text-black font-bold justify-center">
-                                    Create your study plan
-                                </h1> 
+                                    Update your study plan
+                                </h1>
+                                <div>
+                                    <label htmlFor="study-plan-name" className="p-1 text-3xl text-black font-bold justify-center m-2">
+                                        Name
+                                    </label>
+                                    <input
+                                        id="study-plan-name"
+                                        type="text"
+                                        value={studyPlanName}
+                                        onChange={handleChangeName}
+                                        className="text-xl p-2 rounded-lg"/>
+                                </div>
                                 <button 
                                     className="block text-xl w-auto m-4 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
-                                    disabled={selectedCourses.length === 0}
-                                    onClick={handleCreateStudyPlan}
+                                    onClick={handleUpdateStudyPlan}
                                 >
-                                    Save Plan
+                                    Update Plan
                                 </button>
                             </div>
 
@@ -252,4 +271,4 @@ function CreatePlan() {
     );
 }
 
-export default CreatePlan;
+export default EditStudyPlan

@@ -2,12 +2,13 @@ import React from "react";
 
 import CreatePlan from "~/pages/CreatePlan";
 import Dashboard from "~/pages/Dashboard";
+import EditStudyPlan from "~/pages/EditStudyPlan";
 import Home from "~/pages/Home";
 import PlanTree from "~/pages/PlanTree";
 //import TestBackendConnection from "~/pages/TestBackendConnection";
 import Profile from "~/pages/Profile";
-import StudyPlanView from "~/pages/StudyPlanView";
 import ViewProgramme from "~/pages/ViewProgramme";
+import ViewStudyPlan from "~/pages/ViewStudyPlan";
 import { RouterItem } from "~/types/router";
 
 const routes: RouterItem[] = [
@@ -32,9 +33,14 @@ const routes: RouterItem[] = [
     component: <Dashboard />,
   },
   {
-    title: "Study Plan",
-    path: "/study-plan",
-    component: <StudyPlanView />,
+    title: "View Study Plan",
+    path: "/study-plan/:id",
+    component: <ViewStudyPlan />,
+  },
+  {
+    title: "Edit Study Plan",
+    path: "/edit-study-plan/:id",
+    component: <EditStudyPlan />,
   },
   {
     title: "Profile",
