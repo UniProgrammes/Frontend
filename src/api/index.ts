@@ -163,3 +163,9 @@ export const deleteCoursesFromStudyPlan = async (studyPlan: StudyPlan, courses: 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return response.data;
 }
+
+export const deleteStudyPlan = async (id: string) => {
+  const response = await client.delete(`/v1/study-plans/${id}/`);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return response.data;
+};
