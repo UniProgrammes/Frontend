@@ -35,6 +35,8 @@ function CreatePlan() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [planName, setPlanName] = useState("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -108,9 +110,9 @@ function CreatePlan() {
         );
     };
 
-    const handleCreateStudyPlan = () => {
+    const handleCreateStudyPlan = (planName: string) => {
         async function savePlan() {
-            const body = {name: "New study plan 1"};
+            const body = {name: planName };
             const studyPlan = await saveStudyPlan(body);
 
             const bodyRequest = selectedCourses.map((c) => {
@@ -200,6 +202,25 @@ function CreatePlan() {
         </div>
     );
 
+    const handleSaveClick = () => {
+        setModalOpen(true);
+      };
+    
+      const handleModalSave = () => {
+        if (!planName.trim()) {
+          alert("Please enter a valid name for the study plan.");
+          return;
+        }
+        setModalOpen(false); 
+        handleCreateStudyPlan(planName); 
+        setPlanName(""); 
+      };
+    
+      const handleModalClose = () => {
+        setModalOpen(false);
+        setPlanName(""); 
+      };
+
     return (
         <div className="flex flex-row max-h-full max-w-full">
             <div id="main-content" className="w-full flex flex-col">
@@ -221,7 +242,7 @@ function CreatePlan() {
                                 <button 
                                     className="block text-xl w-auto m-4 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
                                     disabled={selectedCourses.length === 0}
-                                    onClick={handleCreateStudyPlan}
+                                    onClick={handleSaveClick}
                                 >
                                     Save Plan
                                 </button>
@@ -248,6 +269,34 @@ function CreatePlan() {
                     )}
                 </main>
             </div>
+            {isModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+                <div className="bg-white rounded-xl shadow-lg p-6 w-96">
+                    <h2 className="text-xl font-bold text-center mb-4">Name Your Study Plan</h2>
+                    <input
+                    type="text"
+                    value={planName}
+                    onChange={(e) => setPlanName(e.target.value)}
+                    placeholder="Enter study plan name"
+                    className="w-full p-2 border rounded-lg mb-4"
+                    />
+                    <div className="flex justify-end space-x-4">
+                    <button
+                        className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
+                        onClick={handleModalClose}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+                        onClick={handleModalSave}
+                    >
+                        Save
+                    </button>
+                    </div>
+                </div>
+                </div>
+            )}
         </div>
     );
 }
