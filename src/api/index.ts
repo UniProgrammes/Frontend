@@ -80,6 +80,11 @@ export interface CourseListPost {
     semester: number;
 }
 
+export interface ValidRequisitesResponse{
+    is_valid: boolean,
+    not_satisfied_prerequisites: string[]
+}
+
 // Create axios instance
 export const client = axios.create({
   baseURL: API_URL,
@@ -148,8 +153,7 @@ export const getCoursesFromStudyPlan = async (studyPlanId: string) => {
 }
 
 export const addCoursesToStudyPlan = async (studyPlan: StudyPlan, courses: {courses: CourseListPost[]}) => {
-  const response = await client.post(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  const response = await client.post<void>(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
   return response.data;
 }
 
@@ -159,8 +163,7 @@ export const updateStudyPlan = async (studyPlanId: string, studyPlanName: {name:
 };
 
 export const deleteCoursesFromStudyPlan = async (studyPlan: StudyPlan, courses: {courses_ids: string[]}) => {
-  const response = await client.post(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  const response = await client.delete<void>(`/v1/study-plans/${studyPlan.id}/courses/`, {data: courses});
   return response.data;
 }
 
@@ -169,3 +172,8 @@ export const deleteStudyPlan = async (id: string) => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return response.data;
 };
+
+export const validatePrerequisites = async (studyPlan: StudyPlan) => {
+  const response = await client.get<ValidRequisitesResponse>(`/v1/study-plans/${studyPlan.id}/validate-prerequisites`);
+  return response.data;
+}
