@@ -5,7 +5,7 @@ import { useParams } from "wouter";
 
 import { RouteParams } from "./ViewStudyPlan";
 
-import { addCoursesToStudyPlan, Course, deleteCoursesFromStudyPlan, getAllCourses, getAllProgrammes, getCoursesFromStudyPlan, getStudyPlan, Programme, StudyPlan, updateStudyPlan } from "~/api";
+import { addCoursesToStudyPlan, Course, deleteCoursesFromStudyPlan, getAllCourses, getAllProgrammes, getCoursesFromStudyPlan, getStudyPlan, Programme, updateStudyPlan } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
 
@@ -20,7 +20,6 @@ function EditStudyPlan() {
     const [loading, setLoading] = useState(true);
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [studyPlan, setStudyPlan] = useState<StudyPlan>();
     const [studyPlanName, setStudyPlanName] = useState<string>("");
     const [newCourses, setNewCourses] = useState<Course[]>([]);
 
@@ -77,7 +76,6 @@ function EditStudyPlan() {
 
         async function loadStudyPlanInfo() {
             const res = await getStudyPlan(id);
-            setStudyPlan(res);
             setStudyPlanName(res ? res.name : "");
             const fetchedCourses = await getCoursesFromStudyPlan(id);
             setSelectedCourses(fetchedCourses.data);
