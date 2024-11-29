@@ -18,9 +18,9 @@ const StudyPlanView: React.FC<StudyPlanViewParams> = ({ id, name, courses, meetR
     const navigate = useNavigate();
 
     return(
-        <div className="flex flex-row max-h-screen max-w-full">
+        <div className="flex flex-row max-w-full">
             <div id="main-content" className="w-full flex flex-col">
-                <main id="planning-content" className="bg-neutral-300 rounded-3xl h-screen p-4 m-8">
+                <main id="planning-content" className="bg-neutral-300 rounded-3xl max-h-full p-4 m-8">
                     <div className="flex items-center justify-between p-8">
                         <div id="study-info" className="text-2xl flex flex-col space-y-4">
                             <h2 className="font-bold text-4xl">{name}</h2>
