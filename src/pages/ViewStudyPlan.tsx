@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { useParams } from "wouter";
 
-import { Course, getCoursesFromStudyPlan, getStudyPlan, StudyPlan } from "~/api";
+import { Course, getCoursesFromStudyPlan, getStudyPlan, StudyPlan, validatePrerequisites, ValidRequisitesResponse } from "~/api";
 import StudyPlanView from "~/components/StudyPlanView";
 
 export interface RouteParams {
@@ -15,6 +15,10 @@ function ViewStudyPlan() {
     const { id } = useParams<RouteParams>();
     const refId = useRef<string>(id);
     const [studyPlan, setStudyPlan] = useState<StudyPlan>();
+    const [valid, setValid] = useState<ValidRequisitesResponse>({
+                                                                    is_valid: false,
+                                                                    not_satisfied_prerequisites: []
+                                                                });
     useEffect(() => {
         async function getCourses() {
             try {
@@ -23,6 +27,9 @@ function ViewStudyPlan() {
 
                 const res = await getStudyPlan(refId.current);
                 setStudyPlan(res);
+
+                const val = await validatePrerequisites(res);
+                setValid(val);
             } catch(_) {
                 refId.current = "";
             }
@@ -33,7 +40,7 @@ function ViewStudyPlan() {
 
     return(
         refId.current.length !== 0 && studyPlan
-        ? <StudyPlanView id={id} name={studyPlan?.name} courses={courses} meetRequirements={true} />
+        ? <StudyPlanView id={id} name={studyPlan.name} courses={courses} validation={valid} />
         : <p className="text-2xl text-red-600 text-center m-36">
             The study plan doesn't exist
           </p>
