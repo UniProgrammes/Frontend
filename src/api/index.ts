@@ -82,7 +82,7 @@ export interface CourseListPost {
 
 export interface ValidRequisitesResponse{
     is_valid: boolean,
-    not_satisfied_prerequisites: string[]
+    not_satisfied_prerequisites: {course: string, prerequisite: string}[]
 }
 
 // Create axios instance
