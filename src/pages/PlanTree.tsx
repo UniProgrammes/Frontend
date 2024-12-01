@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from "react";
 
 import { TrashIcon } from "@radix-ui/react-icons";
@@ -263,11 +262,20 @@ function App() {
                     const hasMissingPrerequisites = course.prerequisites.some(
                         (preId) => !isCourseInTree(preId) || false
                     );
+
+                    const filteredByYear = false;
+                    let yearColor = "white";
+                    if(filteredByYear)
+                        yearColor = colorMapping.get(course.year) || "white";
+
                     return {
                         ...node,
-                        style: hasMissingPrerequisites
-                            ? { backgroundColor: "red", color: "white" }
-                            : { backgroundColor: "#fff", color: "#000" },
+                        style: {
+                            backgroundColor: hasMissingPrerequisites
+                                ? "red"
+                                : yearColor, // Use the color for the year
+                            color: hasMissingPrerequisites ? "white" : "#000",
+                        },
                     };
                 }
                 return node;
