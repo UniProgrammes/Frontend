@@ -48,8 +48,8 @@ function ViewProgramme() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
-    const [displayFilter, setDisplayFilter] = useState<'all' | 'programmes' | 'courses'>('all');
-    const [yearFilter, setYearFilter] = useState<number | 'all'>('all');
+    const [displayFilter, setDisplayFilter] = useState<"all" | "programmes" | "courses">("all");
+    const [yearFilter, setYearFilter] = useState<number | "all">("all");
 
     const handleSearch = async () => {
         if (!searchTerm.trim()) return;
@@ -84,9 +84,9 @@ function ViewProgramme() {
             <div className="flex justify-end items-center gap-4 mb-4 p-6">
                 <div className="flex flex-col">
                     <label className="text-sm font-medium text-neutral-700 mb-1">Display</label>
-                    <select 
+                    <select
                         value={displayFilter}
-                        onChange={(e) => setDisplayFilter(e.target.value as 'all' | 'programmes' | 'courses')}
+                        onChange={(e) => setDisplayFilter(e.target.value as "all" | "programmes" | "courses")}
                         className="rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
                     >
                         <option value="all">All</option>
@@ -95,13 +95,14 @@ function ViewProgramme() {
                     </select>
                 </div>
 
-                {(displayFilter === 'all' || displayFilter === 'courses') && (
+                {
                     <div className="flex flex-col">
                         <label className="text-sm font-medium text-neutral-700 mb-1">Year</label>
-                        <select 
+                        <select
                             value={yearFilter}
-                            onChange={(e) => setYearFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                            className="rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
+                            onChange={(e) => setYearFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
+                            className="disabled:bg-slate-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
+                            disabled={displayFilter === "programmes"}
                         >
                             <option value="all">All Years</option>
                             <option value="1">Year 1</option>
@@ -111,7 +112,7 @@ function ViewProgramme() {
                             <option value="5">Year 5</option>
                         </select>
                     </div>
-                )}
+                }
             </div>
         );
     };
@@ -129,10 +130,10 @@ function ViewProgramme() {
             return <span className="text-lg text-neutral-500">Start typing to search for programmes and courses...</span>;
         }
 
-        const filteredProgrammes = displayFilter === 'courses' ? [] : programmes;
-        const filteredCourses = displayFilter === 'programmes' 
-            ? [] 
-            : yearFilter === 'all'
+        const filteredProgrammes = displayFilter === "courses" ? [] : programmes;
+        const filteredCourses = displayFilter === "programmes"
+            ? []
+            : yearFilter === "all"
                 ? courses
                 : courses.filter(course => course.year === yearFilter);
 
