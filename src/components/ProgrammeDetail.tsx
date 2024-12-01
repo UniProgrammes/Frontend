@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
-import { client } from '../api/index';
+import { useEffect, useState } from "react";
+
 import { CrossCircledIcon } from "@radix-ui/react-icons";
+
+import { client } from "../api/index";
 
 interface Programme {
     id: string;
@@ -19,9 +21,13 @@ interface Course {
     credits: string;
 }
 
+interface setProgrammeFunc {
+    (value: Programme | null): null
+}
+
 interface ProgrammeDetailProps {
     programme: Programme;
-    setSelectedProgramme: Function
+    setSelectedProgramme: setProgrammeFunc
 }
 
 export function ProgrammeDetail({ programme, setSelectedProgramme }: ProgrammeDetailProps) {
@@ -35,7 +41,7 @@ export function ProgrammeDetail({ programme, setSelectedProgramme }: ProgrammeDe
             setError(null);
             try {
                 // Fetch all courses concurrently
-                const coursePromises = programme.courses.map(courseId =>
+                const coursePromises = programme.courses.map(async courseId =>
                     client.get<Course>(`/v1/courses/${courseId}`)
                 );
 
@@ -45,16 +51,15 @@ export function ProgrammeDetail({ programme, setSelectedProgramme }: ProgrammeDe
                 // Extract course data from responses
                 const programmesCourses = responses.map((response: { data: Course }) => response.data);
                 setCourses(programmesCourses);
-            } catch (err) {
-                setError('Failed to fetch courses');
-                console.error('Error fetching courses:', err);
+            } catch (_e) {
+                setError("Failed to fetch courses");
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchCourses();
-    }, [programme.id]);
+    }, [programme.id, programme.courses]);
 
     const removeSelection = () => {
         setSelectedProgramme(null);
@@ -88,7 +93,7 @@ export function ProgrammeDetail({ programme, setSelectedProgramme }: ProgrammeDe
                 </div>
 
                 {/* Courses Section */}
-                <div className='px-6'>
+                <div className="px-6">
                     <h2 className="text-xl font-semibold text-neutral-700 mb-4">
                         Courses ({courses.length})
                     </h2>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { ProgrammeDetail } from '../components/ProgrammeDetail';
+
+import { ProgrammeDetail } from "../components/ProgrammeDetail";
 
 import { client } from "~/api";
 
