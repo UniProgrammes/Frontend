@@ -22,7 +22,7 @@ interface Course {
 }
 
 interface setProgrammeFunc {
-    (value: Programme | null): null
+    (value: Programme | null): void
 }
 
 interface ProgrammeDetailProps {
