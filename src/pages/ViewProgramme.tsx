@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ProgrammeDetail } from '../components/ProgrammeDetail';
 
 import { client } from "~/api";
 
@@ -50,6 +51,7 @@ function ViewProgramme() {
     const [hasSearched, setHasSearched] = useState(false);
     const [displayFilter, setDisplayFilter] = useState<"all" | "programmes" | "courses">("all");
     const [yearFilter, setYearFilter] = useState<number | "all">("all");
+    const [selectedProgramme, setSelectedProgramme] = useState<Programme | null>(null);
 
     const handleSearch = async () => {
         if (!searchTerm.trim()) return;
@@ -77,6 +79,10 @@ function ViewProgramme() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleProgrammeSelect = (programme: Programme) => {
+        setSelectedProgramme(programme);
     };
 
     const renderFilters = () => {
@@ -154,6 +160,12 @@ function ViewProgramme() {
                             <p>Credits: {programme.credits}</p>
                             <p>Courses: {programme.courses.length}</p>
                         </div>
+                        <button
+                            onClick={() => handleProgrammeSelect(programme)}
+                            className="absolute bottom-4 right-4 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded-md p-2"
+                        >
+                            View Details
+                        </button>
                     </div>
                 ))}
 
@@ -182,8 +194,8 @@ function ViewProgramme() {
     };
 
     return (
-        <div className="flex flex-row max-h-full max-w-full">
-            <div id="main-content" className="w-full flex flex-col">
+        <div className="flex flex-row max-h-[calc(100%-63px)] max-w-full">
+            <div id="main-content" className="w-full flex flex-col max-h-full overflow-y-auto">
                 <main className="bg-neutral-300 rounded-3xl p-4 m-8">
                     <h1 className="ml-8 text-2xl font-bold mb-4 text-neutral-700">Search Programmes & Courses</h1>
                     <div id="search-bar" className="flex space-y-4 flex-col items-start bg-[#C3AAEA] rounded-xl p-4">
@@ -209,6 +221,10 @@ function ViewProgramme() {
                     </div>
                 </main>
             </div>
+
+            {selectedProgramme && (
+                <ProgrammeDetail programme={selectedProgramme} setSelectedProgramme={setSelectedProgramme} />
+            )}
         </div>
     );
 }
