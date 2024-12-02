@@ -7,6 +7,7 @@ import Home from "~/pages/Home";
 import PlanTree from "~/pages/PlanTree";
 //import TestBackendConnection from "~/pages/TestBackendConnection";
 import Profile from "~/pages/Profile";
+import Help from "~/pages/Help";
 import ViewProgramme from "~/pages/ViewProgramme";
 import ViewStudyPlan from "~/pages/ViewStudyPlan";
 import { RouterItem } from "~/types/router";
@@ -52,6 +53,11 @@ const routes: RouterItem[] = [
     title: "View Programme & Courses",
     path: "/view-programme",
     component: <ViewProgramme />,
+  },
+  {
+    title: "Help",
+    path: "/help",
+    component: <Help />,
   },
 ];
 
