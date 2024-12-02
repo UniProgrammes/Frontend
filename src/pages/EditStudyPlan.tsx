@@ -93,7 +93,7 @@ function EditStudyPlan() {
     const handleCourseSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const courseId = event.target.value;
         const selectedCourse = courses.find(course => course.id === courseId);
-        if (selectedCourse && !selectedCourses.some(course => course.id === courseId)) {
+        if (selectedCourse && !newCourses.some(course => course.id === courseId)) {
             setNewCourses([...newCourses, selectedCourse]);
         }
     };
