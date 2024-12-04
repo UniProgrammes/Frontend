@@ -3,6 +3,7 @@ import React from "react";
 import CreatePlan from "~/pages/CreatePlan";
 import Dashboard from "~/pages/Dashboard";
 import EditStudyPlan from "~/pages/EditStudyPlan";
+import Help from "~/pages/Help";
 import Home from "~/pages/Home";
 import PlanTree from "~/pages/PlanTree";
 //import TestBackendConnection from "~/pages/TestBackendConnection";
@@ -52,6 +53,11 @@ const routes: RouterItem[] = [
     title: "View Programme & Courses",
     path: "/view-programme",
     component: <ViewProgramme />,
+  },
+  {
+    title: "Help",
+    path: "/help",
+    component: <Help />,
   },
 ];
 
