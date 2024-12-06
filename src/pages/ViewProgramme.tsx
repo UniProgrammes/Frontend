@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+import { ProgrammeDetail } from "../components/ProgrammeDetail";
+
 import { client } from "~/api";
 
 interface Programme {
@@ -48,8 +50,9 @@ function ViewProgramme() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
-    const [displayFilter, setDisplayFilter] = useState<'all' | 'programmes' | 'courses'>('all');
-    const [yearFilter, setYearFilter] = useState<number | 'all'>('all');
+    const [displayFilter, setDisplayFilter] = useState<"all" | "programmes" | "courses">("all");
+    const [yearFilter, setYearFilter] = useState<number | "all">("all");
+    const [selectedProgramme, setSelectedProgramme] = useState<Programme | null>(null);
 
     const handleSearch = async () => {
         if (!searchTerm.trim()) return;
@@ -79,14 +82,18 @@ function ViewProgramme() {
         }
     };
 
+    const handleProgrammeSelect = (programme: Programme) => {
+        setSelectedProgramme(programme);
+    };
+
     const renderFilters = () => {
         return (
             <div className="flex justify-end items-center gap-4 mb-4 p-6">
                 <div className="flex flex-col">
                     <label className="text-sm font-medium text-neutral-700 mb-1">Display</label>
-                    <select 
+                    <select
                         value={displayFilter}
-                        onChange={(e) => setDisplayFilter(e.target.value as 'all' | 'programmes' | 'courses')}
+                        onChange={(e) => setDisplayFilter(e.target.value as "all" | "programmes" | "courses")}
                         className="rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
                     >
                         <option value="all">All</option>
@@ -95,13 +102,14 @@ function ViewProgramme() {
                     </select>
                 </div>
 
-                {(displayFilter === 'all' || displayFilter === 'courses') && (
+                {
                     <div className="flex flex-col">
                         <label className="text-sm font-medium text-neutral-700 mb-1">Year</label>
-                        <select 
+                        <select
                             value={yearFilter}
-                            onChange={(e) => setYearFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                            className="rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
+                            onChange={(e) => setYearFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
+                            className="disabled:bg-slate-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
+                            disabled={displayFilter === "programmes"}
                         >
                             <option value="all">All Years</option>
                             <option value="1">Year 1</option>
@@ -111,7 +119,7 @@ function ViewProgramme() {
                             <option value="5">Year 5</option>
                         </select>
                     </div>
-                )}
+                }
             </div>
         );
     };
@@ -129,10 +137,10 @@ function ViewProgramme() {
             return <span className="text-lg text-neutral-500">Start typing to search for programmes and courses...</span>;
         }
 
-        const filteredProgrammes = displayFilter === 'courses' ? [] : programmes;
-        const filteredCourses = displayFilter === 'programmes' 
-            ? [] 
-            : yearFilter === 'all'
+        const filteredProgrammes = displayFilter === "courses" ? [] : programmes;
+        const filteredCourses = displayFilter === "programmes"
+            ? []
+            : yearFilter === "all"
                 ? courses
                 : courses.filter(course => course.year === yearFilter);
 
@@ -153,6 +161,12 @@ function ViewProgramme() {
                             <p>Credits: {programme.credits}</p>
                             <p>Courses: {programme.courses.length}</p>
                         </div>
+                        <button
+                            onClick={() => handleProgrammeSelect(programme)}
+                            className="absolute bottom-4 right-4 bg-purple-500 hover:bg-purple-600 text-white text-xs rounded-md p-2"
+                        >
+                            View Details
+                        </button>
                     </div>
                 ))}
 
@@ -181,8 +195,8 @@ function ViewProgramme() {
     };
 
     return (
-        <div className="flex flex-row max-h-full max-w-full">
-            <div id="main-content" className="w-full flex flex-col">
+        <div className="flex flex-row max-h-[calc(100%-63px)] max-w-full">
+            <div id="main-content" className="w-full flex flex-col max-h-full overflow-y-auto">
                 <main className="bg-neutral-300 rounded-3xl p-4 m-8">
                     <h1 className="ml-8 text-2xl font-bold mb-4 text-neutral-700">Search Programmes & Courses</h1>
                     <div id="search-bar" className="flex space-y-4 flex-col items-start bg-[#C3AAEA] rounded-xl p-4">
@@ -208,6 +222,10 @@ function ViewProgramme() {
                     </div>
                 </main>
             </div>
+
+            {selectedProgramme && (
+                <ProgrammeDetail programme={selectedProgramme} setSelectedProgramme={setSelectedProgramme} />
+            )}
         </div>
     );
 }

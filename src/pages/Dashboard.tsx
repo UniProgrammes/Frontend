@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { getAllStudyPlans, StudyPlan } from "~/api";
+import { getAllStudyPlans, StudyPlan, deleteStudyPlan } from "~/api";
 import StudyPlanCard from "~/components/StudyPlanCard";
 
 
@@ -19,6 +19,16 @@ function Dashboard() {
         getStudyPlans();
     }, [])
 
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteStudyPlan(id);
+            setStudyPlans((prev) => prev.filter((plan) => plan.id !== id));
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error("Failed to delete study plan:", error);
+            alert("Could not delete the study plan. Please try again.");
+        }
+      };
 
     return(
         <div className="flex flex-row max-h-full max-w-full">
@@ -36,17 +46,19 @@ function Dashboard() {
                         <div  id="study-plan" className="flex space-x-8 p-4">
                             {studyPlans.map((studyPlan) => (
                                 <StudyPlanCard
+                                    key={studyPlan.id}
                                     id={studyPlan.id}
                                     name={studyPlan.name}
                                     completed={studyPlan.status !== "draft"}
                                     numCourses={studyPlan.courses.length}
                                     lastUpdate={studyPlan.updated_at.slice(0, 10)}
+                                    onDelete={handleDelete} 
                                     />
                             ))}
                         </div>
                     ) : (
                         <p className="text-2xl text-gray-600 text-center m-36">
-                            You don't have any study plan yet
+                            You don't have any study plans yet
                         </p>
                     )}
                 </main>
