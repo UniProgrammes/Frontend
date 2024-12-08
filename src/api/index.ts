@@ -169,3 +169,17 @@ export const deleteStudyPlan = async (id: string) => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return response.data;
 };
+
+export interface LearningOutcome {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  description: string;
+  category: string;
+}
+
+export const getLearningOutcome = async (id: string) => {
+    const response = await client.get<LearningOutcome>(`v1/learning-outcomes/${id}`);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return response.data; 
+};
