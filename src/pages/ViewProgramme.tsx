@@ -34,6 +34,7 @@ interface Course {
     learning_outcomes: string[];
     prerequisites: string[];
     year: number;
+    semester: number;
 }
 
 interface CourseResponse {
@@ -60,6 +61,7 @@ function ViewProgramme() {
     const [outcomes, setOutcomes] = useState<Outcome[]>([]);
     const [courses, setCourses] = useState<Course[]>([]);
     const [areas, setAreas] = useState<string[]>([]);
+    const [semesters, setSemesters] = useState<number[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
@@ -68,6 +70,7 @@ function ViewProgramme() {
     const [areaFilter, setAreaFilter] = useState<string | "all">("all");
     const [outcomeFilter, setOutcomeFilter] = useState<string | "all">("all");
     const [selectedProgramme, setSelectedProgramme] = useState<Programme | null>(null);
+    const [semesterFilter, setSemesterFilter] = useState<number | string>("all");
 
     const handleSearch = async () => {
         if (!searchTerm.trim()) return;
@@ -105,6 +108,12 @@ function ViewProgramme() {
                 description: res.data.description
             }));
             setOutcomes(outcomeResponses);
+
+            //Handle setting semesters
+            const allSemesters = Array.from(new Set(courseResponse.data.results.map(course => (
+                course.semester
+            ))));
+            setSemesters(allSemesters);
 
         } catch (_) {
             setError("Failed to fetch results. Please try again.");
@@ -181,6 +190,20 @@ function ViewProgramme() {
                         ))}
                     </select>
                 </div>
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium text-neutral-700 mb-1">Main Area</label>
+                    <select
+                        value={semesterFilter}
+                        onChange={(e) => { setSemesterFilter(e.target.value) }}
+                        className="disabled:bg-slate-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
+                        disabled={displayFilter === "programmes"}
+                    >
+                        <option value="all">All Semesters</option>
+                        {semesters.map(semester => (
+                            <option value={semester}>{semester}</option>
+                        ))}
+                    </select>
+                </div>
             </div>
         );
     };
@@ -215,6 +238,10 @@ function ViewProgramme() {
 
             if (outcomeFilter !== "all") {
                 coursesArr = coursesArr.filter(course => course.learning_outcomes.includes(outcomeFilter));
+            }
+
+            if (semesterFilter !== "all") {
+                coursesArr = coursesArr.filter(course => course.semester === Number(semesterFilter));
             }
 
             return coursesArr;
