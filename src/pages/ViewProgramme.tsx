@@ -96,9 +96,8 @@ function ViewProgramme() {
             const allLearningOutcomes = Array.from(new Set(courseResponse.data.results.map(course => (
                 course.learning_outcomes
             )).flat()));
-            console.log(allLearningOutcomes);
             // Fetch all the learning outcomes descriptions
-            const outcomeRequests = allLearningOutcomes.map(outcome => (
+            const outcomeRequests = allLearningOutcomes.map(async outcome => (
                 client.get<OutcomeResponse>(`/v1/learning-outcomes/${outcome}`)
             ))
             const outcomeResponses = (await Promise.all(outcomeRequests)).map(res => ({
@@ -169,11 +168,11 @@ function ViewProgramme() {
                     </select>
                 </div>
                 <div className="flex flex-col">
-                    <label className="text-sm font-medium text-neutral-700 mb-1 w-48 text-ellipsis">Main Area</label>
+                    <label className="text-sm font-medium text-neutral-700 mb-1">Main Area</label>
                     <select
                         value={outcomeFilter}
                         onChange={(e) => { setOutcomeFilter(e.target.value) }}
-                        className="disabled:bg-slate-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
+                        className="w-48 text-ellipsis disabled:bg-slate-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
                         disabled={displayFilter === "programmes"}
                     >
                         <option value="all">All Outcomes</option>
