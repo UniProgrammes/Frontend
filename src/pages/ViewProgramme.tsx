@@ -43,9 +43,21 @@ interface CourseResponse {
     results: Course[];
 }
 
+interface OutcomeResponse {
+    id: string;
+    description: string;
+    category: string;
+}
+
+interface Outcome {
+    id: string;
+    description: string;
+}
+
 function ViewProgramme() {
     const [searchTerm, setSearchTerm] = useState("");
     const [programmes, setProgrammes] = useState<Programme[]>([]);
+    const [outcomes, setOutcomes] = useState<Outcome[]>([]);
     const [courses, setCourses] = useState<Course[]>([]);
     const [areas, setAreas] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +66,7 @@ function ViewProgramme() {
     const [displayFilter, setDisplayFilter] = useState<"all" | "programmes" | "courses">("all");
     const [yearFilter, setYearFilter] = useState<number | "all">("all");
     const [areaFilter, setAreaFilter] = useState<string | "all">("all");
+    const [outcomeFilter, setOutcomeFilter] = useState<string | "all">("all");
     const [selectedProgramme, setSelectedProgramme] = useState<Programme | null>(null);
 
     const handleSearch = async () => {
@@ -79,6 +92,20 @@ function ViewProgramme() {
             setAreas(Array.from(new Set(coursesWithYear.map(course => (
                 course.main_area
             )))));
+
+            const allLearningOutcomes = Array.from(new Set(courseResponse.data.results.map(course => (
+                course.learning_outcomes
+            )).flat()));
+            console.log(allLearningOutcomes);
+            // Fetch all the learning outcomes descriptions
+            const outcomeRequests = allLearningOutcomes.map(outcome => (
+                client.get<OutcomeResponse>(`/v1/learning-outcomes/${outcome}`)
+            ))
+            const outcomeResponses = (await Promise.all(outcomeRequests)).map(res => ({
+                id: res.data.id,
+                description: res.data.description
+            }));
+            setOutcomes(outcomeResponses);
 
         } catch (_) {
             setError("Failed to fetch results. Please try again.");
@@ -141,6 +168,20 @@ function ViewProgramme() {
                         ))}
                     </select>
                 </div>
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium text-neutral-700 mb-1 w-48 text-ellipsis">Main Area</label>
+                    <select
+                        value={outcomeFilter}
+                        onChange={(e) => { setOutcomeFilter(e.target.value) }}
+                        className="disabled:bg-slate-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
+                        disabled={displayFilter === "programmes"}
+                    >
+                        <option value="all">All Outcomes</option>
+                        {outcomes.map(outcome => (
+                            <option value={outcome.id}>{outcome.description}</option>
+                        ))}
+                    </select>
+                </div>
             </div>
         );
     };
@@ -171,6 +212,10 @@ function ViewProgramme() {
 
             if (areaFilter !== "all") {
                 coursesArr = coursesArr.filter(course => course.main_area === areaFilter);
+            }
+
+            if (outcomeFilter !== "all") {
+                coursesArr = coursesArr.filter(course => course.learning_outcomes.includes(outcomeFilter));
             }
 
             return coursesArr;
