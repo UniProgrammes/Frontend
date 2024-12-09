@@ -117,12 +117,7 @@ const StudyPlanView: React.FC<StudyPlanViewParams> = ({ id, name, courses, valid
                             courses.length > 0
                             ? courses.map((course) => (
                                 <CourseViewCard
-                                    key={course.id}
-                                    name={course.name}
-                                    credits={course.credits} 
-                                    code={course.code} 
-                                    educational_level={course.educational_level} 
-                                    description={course.description}
+                                    course={course}
                                 />
                             ))
                             : <p>You don't have any course selected</p>
