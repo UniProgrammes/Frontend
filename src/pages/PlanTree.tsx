@@ -6,8 +6,8 @@ import ELK from "elkjs/lib/elk.bundled.js";
 import "@xyflow/react/dist/style.css";
 import { useSearchParams } from "react-router-dom";
 
-import { LabeledGroupNode } from "~/components/labeled-group-node";
 import { getAllProgrammes, getAllCourses, getLearningOutcome } from "~/api";
+import { LabeledGroupNode } from "~/components/labeled-group-node";
 
 const nodeTypes = {
     labeledGroupNode: LabeledGroupNode,
@@ -42,6 +42,7 @@ interface Course {
       ects: number;
       style?: React.CSSProperties | undefined;
       isGroup: boolean;
+      learning_outcomes: string[];
     };
   }
 
@@ -257,6 +258,7 @@ function App() {
                     year: 0, 
                     description: "",
                     isGroup: false,
+                    learning_outcomes: []
                 },
                 position: 
                 { 
@@ -319,7 +321,7 @@ function App() {
         void calculateSummary(); 
     }, [nodes, calculateSummary]);
 
-    const onNodeMouseEnter: NodeMouseHandler = useCallback((event, node) => {
+    const onNodeMouseEnter: NodeMouseHandler = useCallback(async (event, node) => {
         const customNode = node as CustomNode;
         event.preventDefault();
         const nodePosition = (event.target as Element).getBoundingClientRect(); // Get node's position
@@ -327,11 +329,9 @@ function App() {
             setPopupInfo(null);
             return;
         }
-
         
         const learningOutcomes = await Promise.all(
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/promise-function-async
-            node.data.learning_outcomes.map((outcomeId: string) => getLearningOutcome(outcomeId))
+            customNode.data.learning_outcomes.map(async (outcomeId: string) => getLearningOutcome(outcomeId))
         );
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
         const descriptions = learningOutcomes.map((outcome) => outcome.description);
@@ -673,6 +673,7 @@ function App() {
                         padding: "10px",
                     } as React.CSSProperties,
                     isGroup: true,
+                    learning_outcomes: []
                 },
                 draggable: false,
             };
@@ -768,21 +769,26 @@ function App() {
                                 <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> YEAR: {popupInfo.courseInfo.year}</p>
                                 <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> ECTS: {popupInfo.courseInfo.ects}</p>
                      
-                      {popupInfo.courseInfo.learning_outcomes.length > 0 ? (
-                            <ul style={{ paddingLeft: "20px", margin: 0 }}>
-                                {popupInfo.courseInfo.learning_outcomes.map((outcome, index) => (
-                                    <li key={index}>{outcome}</li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>None available</p>
+                                {popupInfo.courseInfo.learning_outcomes.length > 0 ? (
+                                        <ul style={{ paddingLeft: "20px", margin: 0 }}>
+                                            {popupInfo.courseInfo.learning_outcomes.map((outcome, index) => (
+                                                <li key={index}>{outcome}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p>None available</p>
+                                    )}
+
                             </div>
-                        )}
-                        {((popupInfo.courseInfo.isGroup)) && (
-                            <div>
-                                 <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> TOTAL ECTS: {popupInfo.courseInfo.ects}</p>
-                            </div>
-                        )}
+                                )}
+                                    {((popupInfo.courseInfo.isGroup)) && (
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> TOTAL ECTS: {popupInfo.courseInfo.ects}</p>
+                                        </div>
+                                    )}
+
+                    </div>
+                )}
             </div>
             {/* Sidebar */}
             <div className="bg-grey-300 h-screen flex flex-col border-l border-gray-300 w-[250px]">
