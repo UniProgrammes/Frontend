@@ -631,8 +631,8 @@ function App() {
             const minX = Math.min(...layerNodes.map((n) => n.position.x));
             const maxX = Math.max(...layerNodes.map((n) => n.position.x));
             const minY = Math.min(...layerNodes.map((n) => n.position.y));
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const maxY = Math.max(...layerNodes.map((n) => n.position.y));
+            
+            // const maxY = Math.max(...layerNodes.map((n) => n.position.y));
 
             if(minX < globalMinX){
                 globalMinX = minX;
