@@ -6,7 +6,7 @@ import ELK from "elkjs/lib/elk.bundled.js";
 import { useSearchParams } from "react-router-dom";
 import ReactFlow, { ReactFlowProvider, MiniMap, Background, Controls, ControlButton, NodeMouseHandler, Node, Edge} from "reactflow";
 
-import { getAllProgrammes, getAllCourses } from "~/api";
+import { getAllProgrammes, getAllCourses, getLearningOutcome } from "~/api";
 
 import "reactflow/dist/style.css";
 
@@ -59,6 +59,7 @@ interface CourseInfo {
     year: string;
     description: string;
     ects: string;
+    learning_outcomes: string[];
 }
 
 const undeletableNodes = ["1"];
@@ -131,6 +132,10 @@ function App() {
     const [searchParams] = useSearchParams();
     const [structure, setStructure] = useState<ProgrammeStructure | null>(null);
     const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
+    // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
+    const [workSummary, setWorkSummary] = useState<{ [category: string]: number }>({});
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [topics, setTopics] = useState<Set<string>>(new Set());
 
     const programmeId = searchParams.get("programmeId");
 
@@ -189,7 +194,7 @@ function App() {
     useEffect(() => {
         if (!structure) return;
         const newNodes: Node[] = [
-            { id: "1", type: "input", data: { label: structure.name, credits: "0"}, position: { x: 250, y: 5 } },
+            { id: "1", type: "input", data: { label: structure.name, credits: "0", learning_outcomes:[]}, position: { x: 250, y: 5 } },
         ];
 
         const newEdges: Edge[] = [];
@@ -214,15 +219,55 @@ function App() {
         setTotalCredits(newTotalCredits);
     }, [structure, nodes]);
 
+
+    const calculateSummary = useCallback(async () => {
+        // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
+        const summary: { [category: string]: number } = {};
+        const uniqueTopics: Set<string> = new Set();
+    
+        for (const node of nodes) {
+            if (node.id === "1") continue; 
+    
+            // Fetch learning outcomes for this node
+            const learningOutcomes = await Promise.all(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/promise-function-async
+                node.data.learning_outcomes.map((outcomeId: string) => getLearningOutcome(outcomeId))
+            );
+    
+            for (const outcome of learningOutcomes) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                summary[outcome.category] = (summary[outcome.category] || 0) + 1;
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                uniqueTopics.add(outcome.description);
+            }
+        }
+    
+        setWorkSummary(summary);
+        setTopics(uniqueTopics);
+    }, [nodes]);
+    
+    useEffect(() => {
+        void calculateSummary(); 
+    }, [nodes, calculateSummary]);
+
     // Handle mouse enter to show the popup
-    const onNodeMouseEnter: NodeMouseHandler = useCallback((event, node: Node) => {
+    const onNodeMouseEnter: NodeMouseHandler = useCallback(async (event, node: Node) => {
         event.preventDefault();
-        const nodePosition = (event.target as Element).getBoundingClientRect(); // Get node's position
+        const nodePosition = (event.target as Element).getBoundingClientRect();
 
         if (node.id === "1") {
             setPopupInfo(null);
             return;
-        } 
+        }
+
+        
+        const learningOutcomes = await Promise.all(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/promise-function-async
+            node.data.learning_outcomes.map((outcomeId: string) => getLearningOutcome(outcomeId))
+        );
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+        const descriptions = learningOutcomes.map((outcome) => outcome.description);
+       
         
         //TO-DO: Fix the node.data creating a new typed object
         const courseInfo: CourseInfo = {
@@ -233,6 +278,7 @@ function App() {
             description: "",
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             ects: node.data?.credits || "7.5",
+            learning_outcomes: descriptions,
         };
 
         const popupInfo: PopupInfo = {
@@ -292,7 +338,7 @@ function App() {
 
             const newNode = {
                 id: course.id,
-                data: { label: course.name , credits: course.credits, year: course.year },
+                data: { label: course.name , credits: course.credits, year: course.year, learning_outcomes: course.learning_outcomes },
                 position: { x: 0, y: 0 }, // Position will be updated by ELK
             };
 
@@ -405,7 +451,8 @@ function App() {
                         label: course.name,
                         year: course.year,
                         description: "",
-                        ects: "7.5"
+                        credits: course.credits,
+                        learning_outcomes: course.learning_outcomes,
                     },
                     position: { x: 0, y: 0 }, // Position will be updated by ELK
                 };
@@ -465,6 +512,10 @@ function App() {
 
     }, [nodes]);
 
+    const handleOpenSidebar = () => {
+        setIsSidebarOpen((prev) => !prev);
+      };
+
     return (
         <div style={{ display: "flex", height: "100vh" }}>
             {/* React Flow Canvas */}
@@ -521,7 +572,18 @@ function App() {
                             YEAR: {popupInfo.courseInfo.year}
                             <br />
                             ECTS: {popupInfo.courseInfo.ects}
+                            <br />
+                            <strong>Learning Outcomes:</strong>
                         </p>
+                        {popupInfo.courseInfo.learning_outcomes.length > 0 ? (
+                            <ul style={{ paddingLeft: "20px", margin: 0 }}>
+                                {popupInfo.courseInfo.learning_outcomes.map((outcome, index) => (
+                                    <li key={index}>{outcome}</li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <span>None available</span>
+                        )}
                     </div>
                 )}
 
@@ -564,7 +626,7 @@ function App() {
                                     className="p-3 rounded cursor-pointer"
                                 >
                                     <p>
-                                        {course.name} ({course.year})</p>
+                                        {course.name} ({course.year}) ({course.learning_outcomes})</p>
                                 </div>
                             </li>
                         ))}
@@ -577,10 +639,71 @@ function App() {
                 >
                     Import All Courses
                 </button>
-            </div>
+                <div>
+                    <div>
+                        <button onClick={handleOpenSidebar} className="uppercase w-full p-4 text-white border-t cursor-pointer text-center bg-purple-600 hover:bg-purple-700">
+                        {isSidebarOpen ? "Close Work Summary" : "View Work Summary"}
+                        </button>
+                    </div>
+                    {isSidebarOpen && (
+                        <div
+                        style={{
+                            width: "300px",
+                            backgroundColor: "#f9f9f9",
+                            boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
+                            padding: "20px",
+                            position: "fixed",
+                            top: 0,
+                            right: 0,
+                            height: "100%",
+                            overflowY: "auto",
+                        }}
+                        >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h2 style={{ fontWeight: "bold", fontSize: "24px", marginBottom: "20px" }}  >Work Summary</h2>
+                            <button
+                            onClick={() => setIsSidebarOpen(false)}
+                            style={{
+                                backgroundColor: "red",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "5px",
+                                padding: "5px 10px",
+                                cursor: "pointer",
+                            }}
+                            >
+                            Close
+                            </button>
+                        </div>
+                        <h3 style={{ fontWeight: "bold", fontSize: "18px", marginTop: "10px" }}>Assignments Types</h3>
+                        {Object.keys(workSummary).length === 0 ? (
+                        <p>No work assigned yet.</p>
+                        ) : (
+                        <ul>
+                            {Object.entries(workSummary).map(([category, count], index) => (
+                            <li key={index}>
+                                {category}: {count}
+                            </li>
+                            ))}
+                        </ul>
+                        )}
 
-
-
+                        <h3 style={{ fontWeight: "bold", fontSize: "18px", marginTop: "20px" }}>Topics Studied</h3>
+                        {topics.size === 0 ? (
+                        <p>No topics assigned yet.</p>
+                        ) : (
+                        <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
+                            {[...topics].map((topic, index) => (
+                            <li key={index} style={{ marginBottom: "5px" }}>
+                                {topic}
+                            </li>
+                            ))}
+                        </ul>
+                        )}
+                        </div>
+                        )}
+                    </div>
+            </div>  
 
         </div>
     );

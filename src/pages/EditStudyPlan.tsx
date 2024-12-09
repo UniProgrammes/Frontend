@@ -205,6 +205,7 @@ function EditStudyPlan() {
                         code={course.code}
                         educational_level={course.educational_level}
                         description={course.description}
+                        semester={course.semester}
                         onRemove={() => handleRemoveCourse(course.id)}
                     />
                 ))

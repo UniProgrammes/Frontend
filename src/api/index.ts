@@ -56,22 +56,23 @@ export interface Course {
   learning_outcomes: string[];
   prerequisites: string[];
   year: number;
+  semester: number;
 }
 
 export interface StudyPlan {
-  id: string,
-  created_at: string,
-  updated_at: string,
-  name: string,
-  status: string,
-  user: number,
-  courses: string[]
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  status: string;
+  user: number;
+  courses: string[];
 }
 
 export interface StudyPlanGetResponse {
-  count: number,
-  next: string | null,
-  previous: string | null,
+  count: number;
+  next: string | null;
+  previous: string | null;
   results: StudyPlan[];
 }
 
@@ -80,9 +81,14 @@ export interface CourseListPost {
     semester: number;
 }
 
-export interface ValidRequisitesResponse{
-    is_valid: boolean,
-    not_satisfied_prerequisites: string[]
+export interface ValidRequisitesResponse {
+    is_valid: boolean;
+    not_satisfied_prerequisites: {course: string, prerequisite: string}[];
+}
+
+export interface ValidCourses {
+    is_valid: boolean;
+    not_satisfied_prerequisites: {course: Course, prerequisite: Course}[];
 }
 
 // Create axios instance
@@ -172,6 +178,25 @@ export const deleteStudyPlan = async (id: string) => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return response.data;
 };
+
+export interface LearningOutcome {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  description: string;
+  category: string;
+}
+
+export const getLearningOutcome = async (id: string) => {
+    const response = await client.get<LearningOutcome>(`v1/learning-outcomes/${id}`);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return response.data; 
+};
+
+export const getCourseById = async (courseId: string) => {
+  const response = await client.get<Course>(`/v1/courses/${courseId}`);
+  return response.data;
+}
 
 export const validatePrerequisites = async (studyPlan: StudyPlan) => {
   const response = await client.get<ValidRequisitesResponse>(`/v1/study-plans/${studyPlan.id}/validate-prerequisites`);
