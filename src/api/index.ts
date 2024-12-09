@@ -56,6 +56,7 @@ export interface Course {
   learning_outcomes: string[];
   prerequisites: string[];
   year: number;
+  semester: number;
 }
 
 export interface StudyPlan {
