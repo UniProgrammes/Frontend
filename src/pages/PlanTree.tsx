@@ -828,7 +828,7 @@ function App() {
                                     className="p-3 rounded cursor-pointer"
                                 >
                                     <p>
-                                        {course.name} ({course.year}) ({course.learning_outcomes})</p>
+                                        {course.name} ({course.year}) </p>
                                 </div>
                             </li>
                         ))}
