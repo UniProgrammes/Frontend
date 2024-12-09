@@ -1,14 +1,17 @@
-
 import React, { useState, useCallback, useEffect } from "react";
 
-import { TrashIcon } from "@radix-ui/react-icons";
+import { TrashIcon, CardStackPlusIcon } from "@radix-ui/react-icons";
+import { ReactFlow, ReactFlowProvider, MiniMap, Background, Controls, ControlButton, NodeMouseHandler, Node, Edge } from "@xyflow/react";
 import ELK from "elkjs/lib/elk.bundled.js";
+import "@xyflow/react/dist/style.css";
 import { useSearchParams } from "react-router-dom";
-import ReactFlow, { ReactFlowProvider, MiniMap, Background, Controls, ControlButton, NodeMouseHandler, Node, Edge} from "reactflow";
 
 import { getAllProgrammes, getAllCourses, getLearningOutcome } from "~/api";
+import { LabeledGroupNode } from "~/components/labeled-group-node";
 
-import "reactflow/dist/style.css";
+const nodeTypes = {
+    labeledGroupNode: LabeledGroupNode,
+};
 
 interface Course {
     id: string;
@@ -31,15 +34,27 @@ interface Course {
     courses: Course[];
   }
 
+  interface CustomNode extends Node {
+    data: {
+      label: string;
+      year: number;
+      description?: string;
+      ects: number;
+      style?: React.CSSProperties | undefined;
+      isGroup: boolean;
+      learning_outcomes: string[];
+    };
+  }
+
 const pastelColors = [
-    "hsl(210, 60%, 50%)", // Light Blue
-    "hsl(180, 60%, 55%)", // Aqua Green
-    "hsl(150, 60%, 50%)", // Soft Mint
-    "hsl(120, 60%, 55%)", // Light Green
-    "hsl(60, 60%, 55%)",  // Pale Yellow
-    "hsl(30, 60%, 50%)",  // Peach
-    "hsl(0, 60%, 55%)",   // Soft Coral
-    "hsl(300, 60%, 50%)"  // Lavender
+    "rgba(102, 153, 255, 1)", // Light Blue
+    "rgba(102, 255, 204, 1)", // Aqua Green
+    "rgba(102, 255, 153, 1)", // Soft Mint
+    "rgba(102, 255, 102, 1)", // Light Green
+    "rgba(255, 255, 102, 1)", // Pale Yellow
+    "rgba(255, 204, 102, 1)", // Peach
+    "rgba(255, 102, 102, 1)", // Soft Coral
+    "rgba(204, 102, 255, 1)"  // Lavender
 ];
 
 const years = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -56,24 +71,46 @@ interface PopupInfo {
 
 interface CourseInfo {
     label: string;
-    year: string;
+    year: number;
     description: string;
-    ects: string;
+    ects: number;
+    isGroup: boolean;
     learning_outcomes: string[];
 }
 
-const undeletableNodes = ["1"];
+let undeletableNodes: Set<string> = new Set();
 
 // ELK instance
 const elk = new ELK();
 
 // Helper function to layout the nodes using ELK
-const getLayoutedElements = async (nodes: Node[], edges: Edge[], direction = "DOWN") => {
-    const elkNodes = nodes.map((node: { id: string; }) => ({
-        id: node.id,
-        width: 150,
-        height: 50,
-    }));
+const getLayoutedElements = async (nodes: CustomNode[], edges: Edge[], algorithm: string = "mrtree", nodeNodeBetweenLayers: number = 50) => {
+   
+    const bookedLayer: Set<number> = new Set();
+
+    const elkNodes = nodes.sort((a, b) => a.data.year - b.data.year).map((node: CustomNode) => {
+
+        const year: number = node.data.year;
+
+        let proposedLayer = year;
+
+        if(!bookedLayer.has(proposedLayer))
+        {
+            bookedLayer.add(proposedLayer);
+        }else{
+            proposedLayer = proposedLayer + 1
+        }
+
+        return {
+            id: node.id,
+            width: 150,
+            height: 50,
+            layoutOptions: {
+                "elk.layered.layering.layerId": `${proposedLayer}`,
+                "elk.rectpacking.inNewRow": `${(proposedLayer != year)}`
+            }
+        };
+    })
 
     const elkEdges = edges.map((edge: { id: string; source: string; target: string; }) => ({
         id: edge.id,
@@ -82,17 +119,24 @@ const getLayoutedElements = async (nodes: Node[], edges: Edge[], direction = "DO
     }));
 
     const layoutOptions = {
-        "elk.algorithm": "layered", // Layered algorithm for hierarchical layouts
-        "elk.layered.spacing.nodeNodeBetweenLayers": "50", // Spacing between layers
-        "elk.spacing.nodeNode": "25", // Spacing between nodes in the same layer
-        "elk.layered.spacing.nodeNodeBetweenConnectedNodes": "25", // Spacing between connected nodes
-        "elk.layered.considerModelOrder": "true", // Consider the model order
-        "elk.layered.crossingMinimization.semiInteractive": "true", // Minimize crossings
-        "elk.layered.thoroughness": "5", // Thoroughness level,
-        "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
-        "elk.layered.nodePlacement.bk.fixedAlignment": "CENTER",
+        "elk.algorithm": algorithm,
+        "elk.direction": "DOWN", 
         "elk.alignment": "CENTER",
-        "elk.direction": direction,
+        "elk.layered.mergeHierarchies": "false", 
+       
+        "elk.layered.allowEmptyLayers": "true",
+        "elk.spacing.nodeNode": "100", 
+        "elk.layered.spacing.nodeNodeBetweenLayers": nodeNodeBetweenLayers.toString(), 
+        "elk.layered.spacing.nodeNodeBetweenConnectedNodes": "200",
+
+        "elk.layered.crossingMinimization.semiInteractive": "true",
+        "elk.layered.thoroughness": "5",
+
+        "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
+
+        "elk.layered.considerModelOrder": "true",
+
+        "elk.interactiveLayout": "true",
     };
 
     const graph = {
@@ -102,31 +146,37 @@ const getLayoutedElements = async (nodes: Node[], edges: Edge[], direction = "DO
         edges: elkEdges,
     };
 
-    const layout = await elk.layout(graph);
+    const treeNodes = await elk.layout(graph).then((layout) => {
+        const layoutedNodes: CustomNode[] = nodes.map((node: CustomNode) => {
+            const layoutNode = layout.children?.find((n) => n.id === node.id);
 
-    const layoutedNodes: Node[] = nodes.map((node: Node) => {
-        const layoutNode = layout.children?.find((n) => n.id === node.id);
+            if (!layoutNode) return node;
 
-        if (!layoutNode) return node;
+            return {
+                ...node,
+                position: {
+                    x: layoutNode.x || 0,
+                    y: layoutNode.y || 0,
+                },
+                draggable: false, // Prevent manual dragging since we"re using automatic layout
+            };
+        });
 
-        return {
-            ...node,
-            position: {
-                x: layoutNode.x || 0,
-                y: layoutNode.y || 0,
-            },
-            draggable: false, // Prevent manual dragging since we"re using automatic layout
-        };
-    });
-
-    const treeNodes: Node[] = layoutedNodes;
+        return layoutedNodes;
+    }).catch(() => { 
+        return new Array<CustomNode>();
+    })
 
     return { nodes: treeNodes, edges };
 };
 
+
+
 function App() {
-    const [nodes, setNodes] = useState<Node[]>([]);
+
+    const [nodes, setNodes] = useState<CustomNode[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
+
     const [courseList, setCourses] = useState<Course[]>([]);
     const [totalCredits,setTotalCredits] = useState<number>(0);
     const [searchParams] = useSearchParams();
@@ -139,12 +189,13 @@ function App() {
 
     const programmeId = searchParams.get("programmeId");
 
-      
     useEffect(() => {
         const fetchStructure = async () => {
             if (!programmeId) {
                 return;
             }
+
+            //TODO: fetch only the program with the id
             const programmes = await getAllProgrammes();
             const courses = await getAllCourses().then((courses: Course[]) => {
                 const sortedCourses = courses.sort(
@@ -172,7 +223,7 @@ function App() {
                     }else{
                         const prerequisiteCourse = courses.find((c) => c.id === course.prerequisites[0]);
                         if (prerequisiteCourse) {
-                            course.year = (prerequisiteCourse?.year || 0) + 1;
+                            course.year = (prerequisiteCourse.year || 0) + 1;
                         }
                     }
                 }
@@ -193,9 +244,31 @@ function App() {
 
     useEffect(() => {
         if (!structure) return;
-        const newNodes: Node[] = [
-            { id: "1", type: "input", data: { label: structure.name, credits: "0", learning_outcomes:[]}, position: { x: 250, y: 5 } },
+
+        undeletableNodes.clear();
+
+        const newNodes: CustomNode[] = [
+            { 
+                id: "1",
+                type: "input", 
+                data: 
+                { 
+                    label: structure.name,  
+                    ects: 0, 
+                    year: 0, 
+                    description: "",
+                    isGroup: false,
+                    learning_outcomes: []
+                },
+                position: 
+                { 
+                    x: 250, 
+                    y: 5 
+                } 
+            },
         ];
+
+        undeletableNodes = new Set(newNodes.map((node) => node.id));
 
         const newEdges: Edge[] = [];
 
@@ -208,11 +281,9 @@ function App() {
     useEffect(() => {
         if (!structure) return;
         const newTotalCredits = nodes.reduce((total, node) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            const credits = node.data?.credits;
-        
+            const credits: number = node.data.ects;
             if (credits && !isNaN(credits)) {
-              return total + parseFloat(credits); 
+              return total + credits; 
             }
             return total;
           }, 0);
@@ -250,35 +321,29 @@ function App() {
         void calculateSummary(); 
     }, [nodes, calculateSummary]);
 
-    // Handle mouse enter to show the popup
-    const onNodeMouseEnter: NodeMouseHandler = useCallback(async (event, node: Node) => {
+    const onNodeMouseEnter: NodeMouseHandler = useCallback(async (event, node) => {
+        const customNode = node as CustomNode;
         event.preventDefault();
-        const nodePosition = (event.target as Element).getBoundingClientRect();
-
-        if (node.id === "1") {
+        const nodePosition = (event.target as Element).getBoundingClientRect(); // Get node's position
+        if (customNode.id === "1") {
             setPopupInfo(null);
             return;
         }
-
         
         const learningOutcomes = await Promise.all(
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/promise-function-async
-            node.data.learning_outcomes.map((outcomeId: string) => getLearningOutcome(outcomeId))
+            customNode.data.learning_outcomes.map(async (outcomeId: string) => getLearningOutcome(outcomeId))
         );
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
         const descriptions = learningOutcomes.map((outcome) => outcome.description);
        
         
-        //TO-DO: Fix the node.data creating a new typed object
         const courseInfo: CourseInfo = {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            label: node.data.label,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            year: node.data.year?.toString(),
+            label: customNode.data.label,
+            year: customNode.data.year,
             description: "",
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            ects: node.data?.credits || "7.5",
-            learning_outcomes: descriptions,
+            ects: customNode.data.ects || 7.5,
+            isGroup: customNode.data.isGroup,
+            learning_outcomes: descriptions
         };
 
         const popupInfo: PopupInfo = {
@@ -302,18 +367,27 @@ function App() {
 
     // Function to update node styles based on prerequisites
     const updateNodeStyles = useCallback(
-        (nodesToUpdate: Node[]) => {
+        (nodesToUpdate: CustomNode[]) => {
             return nodesToUpdate.map((node: { id: string; }) => {
                 const course = courseList.find((c) => c.id === node.id);
                 if (course) {
                     const hasMissingPrerequisites = course.prerequisites.some(
                         (preId) => !isCourseInTree(preId) || false
                     );
+
+                    const filteredByYear = false;
+                    let yearColor = "white";
+                    if(filteredByYear)
+                        yearColor = colorMapping.get(course.year) || "white";
+
                     return {
                         ...node,
-                        style: hasMissingPrerequisites
-                            ? { backgroundColor: "red", color: "white" }
-                            : { backgroundColor: "#fff", color: "#000" },
+                        style: {
+                            backgroundColor: hasMissingPrerequisites
+                                ? "red"
+                                : yearColor, // Use the color for the year
+                            color: hasMissingPrerequisites ? "white" : "#000",
+                        },
                     };
                 }
                 return node;
@@ -336,9 +410,16 @@ function App() {
                 return;  
             }
 
-            const newNode = {
+            const newNode: CustomNode = {
                 id: course.id,
-                data: { label: course.name , credits: course.credits, year: course.year, learning_outcomes: course.learning_outcomes },
+                data: { 
+                    label: course.name, 
+                    description: course.description,
+                    ects: parseFloat(course.credits), 
+                    year: course.year,
+                    isGroup: false,
+                    learning_outcomes: course.learning_outcomes
+                 },
                 position: { x: 0, y: 0 }, // Position will be updated by ELK
             };
 
@@ -400,7 +481,7 @@ function App() {
         async (event: React.MouseEvent, node: { id: string; }) => {
             event.preventDefault();
             const nodeId = node.id;
-            if (undeletableNodes.includes(nodeId)) return;
+            if (undeletableNodes.has(nodeId)) return;
             // Remove node and connected edges
             setPopupInfo(null); // Hide popup
             const newNodes = nodes.filter((n) => n.id !== nodeId);
@@ -437,7 +518,7 @@ function App() {
         const existingNodeIds = new Set(nodes.map(node => node.id));
 
         // Initialize newNodes and newEdges with existing ones
-        const newNodes: Node[] = [...nodes];
+        const newNodes: CustomNode[] = [...nodes];
         const newEdges: Edge[] = [...edges];
 
         // For each course in courseList
@@ -445,14 +526,15 @@ function App() {
             // If the course is not already in the nodes
             if (!existingNodeIds.has(course.id)) {
                 // Create a node for the course
-                const newNode = {
+                const newNode: CustomNode = {
                     id: course.id,
                     data: {
                         label: course.name,
                         year: course.year,
+                        ects: 7.5,
+                        isGroup: false,
                         description: "",
-                        credits: course.credits,
-                        learning_outcomes: course.learning_outcomes,
+                        learning_outcomes: course.learning_outcomes
                     },
                     position: { x: 0, y: 0 }, // Position will be updated by ELK
                 };
@@ -498,6 +580,7 @@ function App() {
         // Update node styles
         const styledNodes = updateNodeStyles(layoutedElements.nodes);
 
+        
         //@ts-expect-error - setNodes expect the parsed type of the styledNodes
         setNodes(styledNodes);
         setEdges(layoutedElements.edges);
@@ -506,12 +589,120 @@ function App() {
 
     const removeAllCourses = useCallback(async () => {
         // Keep only the root node
-        const initialNodes: Node[] = nodes.filter(s => s.id == "1");
+        const initialNodes: CustomNode[] = nodes.filter(s => s.id == "1");
         setNodes(initialNodes);
         setEdges([]);
 
     }, [nodes]);
 
+    const handleGroupNodes = useCallback(async () => {
+        if (nodes.length === 0) return;
+
+        // Group nodes by their approximate layer (y-position).
+        // We'll map each unique y-level to an array of node IDs.
+        const layerMap = new Map<number, CustomNode[]>();
+        
+        // const currentNodes = nodes.filter((node) => node.type == "labeledGroupNode");
+
+        // Make sure nodes are laid out before grouping
+        const layoutedElements = await getLayoutedElements(nodes, edges, "layered", 300);
+
+        layoutedElements.nodes.forEach((node) => {
+            if (node.id === "1") return; // skip root node if desired
+
+            const year: number = parseInt(node.data.year.toString() || "0");
+
+            const layerNodes = layerMap.get(year) || [];
+            layerNodes.push(node);
+            layerMap.set(year, layerNodes);
+        });
+
+        let updatedNodes = [...nodes];
+
+        const groupNodes: CustomNode[] = [];
+
+        let globalMinX = 0;
+        let globalGroupWidth = 0;
+
+        // For each layer with multiple nodes, create a group node
+        layerMap.forEach((layerNodes, year) => {
+
+            // Compute bounding box for this layer
+            const minX = Math.min(...layerNodes.map((n) => n.position.x));
+            const maxX = Math.max(...layerNodes.map((n) => n.position.x));
+            const minY = Math.min(...layerNodes.map((n) => n.position.y));
+            
+            // const maxY = Math.max(...layerNodes.map((n) => n.position.y));
+
+            if(minX < globalMinX){
+                globalMinX = minX;
+            }
+
+            const groupWidth = maxX - minX + 300; // Padding for aesthetics
+            // const groupHeight = maxY - minY + 200; // Padding for aesthetics
+            const groupHeight = 350; // Padding for aesthetics
+
+
+            if(groupWidth > globalGroupWidth){
+                globalGroupWidth = groupWidth;
+            }
+
+            // Create a new group node
+            const newGroupNodeId = `group_${Date.now()}_${year}`;
+            const groupNode: CustomNode = {
+                id: newGroupNodeId,
+                type: "labeledGroupNode",
+                position: { x: globalMinX - 200 , y: minY - 50 },
+                width: globalGroupWidth,
+                height: groupHeight,
+                data: { 
+                    label: `Year ${year}`,
+                    description: "",
+                    ects: updatedNodes.filter((n) => layerNodes.some((ln) => ln.id === n.id)).reduce((total, node) => {
+                        const ects = node.data.ects;
+                            if (!isNaN(ects)) {
+                                return total + ects;
+                            }
+                        return total;
+                    }, 0),
+                    year: year,
+                    style: {
+                        backgroundColor: colorMapping.get(year),
+                        border: "1px solid #ccc",
+                        borderRadius: "5px",
+                        padding: "10px",
+                    } as React.CSSProperties,
+                    isGroup: true,
+                    learning_outcomes: []
+                },
+                draggable: false,
+            };
+
+            undeletableNodes.add(newGroupNodeId);
+            groupNodes.push(groupNode);
+
+            // Update each layer node to be a child of the group node
+            updatedNodes = updatedNodes.map((n) => {
+                if (layerNodes.some((ln) => ln.id === n.id)) {
+                    return {
+                        ...n,
+                        parentId: newGroupNodeId,
+                        extent: "parent",
+                    };
+                }
+                return n;
+            });
+        });
+
+        // setGroups(groupNodes);
+
+        const updatedNodesWithGroups = [...groupNodes, ...updatedNodes]
+
+        // Set the updated nodes
+        setNodes(updatedNodesWithGroups);
+        setEdges(layoutedElements.edges);
+    }, [nodes, edges]);
+    
     const handleOpenSidebar = () => {
         setIsSidebarOpen((prev) => !prev);
       };
@@ -536,12 +727,16 @@ function App() {
                             onNodeMouseEnter={onNodeMouseEnter}
                             onNodeMouseLeave={onNodeMouseLeave}
                             fitView
+                            defaultNodes={nodes} nodeTypes={nodeTypes}
                         >
                             <MiniMap position="top-right" />
                             <Controls position="top-left"
                                 showInteractive={false}>
                                 <ControlButton onClick={(removeAllCourses)}>
                                     <TrashIcon />
+                                </ControlButton>
+                                <ControlButton onClick={handleGroupNodes}>
+                                    <CardStackPlusIcon />
                                 </ControlButton>
                             </Controls>
                             <Background />
@@ -568,25 +763,32 @@ function App() {
                         <p style={{ margin: 0, fontSize: "14px", color: "#555" }}>
                             {popupInfo.courseInfo.description}
                         </p>
-                        <p style={{ margin: 0, fontSize: "14px", color: "#555" }}>
-                            YEAR: {popupInfo.courseInfo.year}
-                            <br />
-                            ECTS: {popupInfo.courseInfo.ects}
-                            <br />
-                            <strong>Learning Outcomes:</strong>
-                        </p>
-                        {popupInfo.courseInfo.learning_outcomes.length > 0 ? (
-                            <ul style={{ paddingLeft: "20px", margin: 0 }}>
-                                {popupInfo.courseInfo.learning_outcomes.map((outcome, index) => (
-                                    <li key={index}>{outcome}</li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <span>None available</span>
-                        )}
+
+                        {(!(popupInfo.courseInfo.isGroup)) && (
+                            <div>
+                                <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> YEAR: {popupInfo.courseInfo.year}</p>
+                                <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> ECTS: {popupInfo.courseInfo.ects}</p>
+                     
+                                {popupInfo.courseInfo.learning_outcomes.length > 0 ? (
+                                        <ul style={{ paddingLeft: "20px", margin: 0 }}>
+                                            {popupInfo.courseInfo.learning_outcomes.map((outcome, index) => (
+                                                <li key={index}>{outcome}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p>None available</p>
+                                    )}
+
+                            </div>
+                                )}
+                                    {((popupInfo.courseInfo.isGroup)) && (
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> TOTAL ECTS: {popupInfo.courseInfo.ects}</p>
+                                        </div>
+                                    )}
+
                     </div>
                 )}
-
             </div>
             {/* Sidebar */}
             <div className="bg-grey-300 h-screen flex flex-col border-l border-gray-300 w-[250px]">
@@ -626,7 +828,7 @@ function App() {
                                     className="p-3 rounded cursor-pointer"
                                 >
                                     <p>
-                                        {course.name} ({course.year}) ({course.learning_outcomes})</p>
+                                        {course.name} ({course.year}) </p>
                                 </div>
                             </li>
                         ))}
