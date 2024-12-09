@@ -6,8 +6,8 @@ import ELK from "elkjs/lib/elk.bundled.js";
 import "@xyflow/react/dist/style.css";
 import { useSearchParams } from "react-router-dom";
 
-import { getAllProgrammes, getAllCourses } from "~/api";
 import { LabeledGroupNode } from "~/components/labeled-group-node";
+import { getAllProgrammes, getAllCourses, getLearningOutcome } from "~/api";
 
 const nodeTypes = {
     labeledGroupNode: LabeledGroupNode,
@@ -74,6 +74,7 @@ interface CourseInfo {
     description: string;
     ects: number;
     isGroup: boolean;
+    learning_outcomes: string[];
 }
 
 let undeletableNodes: Set<string> = new Set();
@@ -180,6 +181,10 @@ function App() {
     const [searchParams] = useSearchParams();
     const [structure, setStructure] = useState<ProgrammeStructure | null>(null);
     const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
+    // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
+    const [workSummary, setWorkSummary] = useState<{ [category: string]: number }>({});
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [topics, setTopics] = useState<Set<string>>(new Set());
 
     const programmeId = searchParams.get("programmeId");
 
@@ -283,7 +288,37 @@ function App() {
         setTotalCredits(newTotalCredits);
     }, [structure, nodes]);
 
-    // Handle mouse enter to show the popup
+
+    const calculateSummary = useCallback(async () => {
+        // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
+        const summary: { [category: string]: number } = {};
+        const uniqueTopics: Set<string> = new Set();
+    
+        for (const node of nodes) {
+            if (node.id === "1") continue; 
+    
+            // Fetch learning outcomes for this node
+            const learningOutcomes = await Promise.all(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/promise-function-async
+                node.data.learning_outcomes.map((outcomeId: string) => getLearningOutcome(outcomeId))
+            );
+    
+            for (const outcome of learningOutcomes) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                summary[outcome.category] = (summary[outcome.category] || 0) + 1;
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                uniqueTopics.add(outcome.description);
+            }
+        }
+    
+        setWorkSummary(summary);
+        setTopics(uniqueTopics);
+    }, [nodes]);
+    
+    useEffect(() => {
+        void calculateSummary(); 
+    }, [nodes, calculateSummary]);
+
     const onNodeMouseEnter: NodeMouseHandler = useCallback((event, node) => {
         const customNode = node as CustomNode;
         event.preventDefault();
@@ -291,7 +326,16 @@ function App() {
         if (customNode.id === "1") {
             setPopupInfo(null);
             return;
-        } 
+        }
+
+        
+        const learningOutcomes = await Promise.all(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/promise-function-async
+            node.data.learning_outcomes.map((outcomeId: string) => getLearningOutcome(outcomeId))
+        );
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
+        const descriptions = learningOutcomes.map((outcome) => outcome.description);
+       
         
         const courseInfo: CourseInfo = {
             label: customNode.data.label,
@@ -299,6 +343,7 @@ function App() {
             description: "",
             ects: customNode.data.ects || 7.5,
             isGroup: customNode.data.isGroup,
+            learning_outcomes: descriptions
         };
 
         const popupInfo: PopupInfo = {
@@ -373,6 +418,7 @@ function App() {
                     ects: parseFloat(course.credits), 
                     year: course.year,
                     isGroup: false,
+                    learning_outcomes: course.learning_outcomes
                  },
                 position: { x: 0, y: 0 }, // Position will be updated by ELK
             };
@@ -487,6 +533,8 @@ function App() {
                         year: course.year,
                         ects: 7.5,
                         isGroup: false,
+                        description: "",
+                        learning_outcomes: course.learning_outcomes
                     },
                     position: { x: 0, y: 0 }, // Position will be updated by ELK
                 };
@@ -653,6 +701,10 @@ function App() {
         setNodes(updatedNodesWithGroups);
         setEdges(layoutedElements.edges);
     }, [nodes, edges]);
+    
+    const handleOpenSidebar = () => {
+        setIsSidebarOpen((prev) => !prev);
+      };
 
     return (
         <div style={{ display: "flex", height: "100vh" }}>
@@ -715,6 +767,15 @@ function App() {
                             <div>
                                 <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> YEAR: {popupInfo.courseInfo.year}</p>
                                 <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> ECTS: {popupInfo.courseInfo.ects}</p>
+                     
+                      {popupInfo.courseInfo.learning_outcomes.length > 0 ? (
+                            <ul style={{ paddingLeft: "20px", margin: 0 }}>
+                                {popupInfo.courseInfo.learning_outcomes.map((outcome, index) => (
+                                    <li key={index}>{outcome}</li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p>None available</p>
                             </div>
                         )}
                         {((popupInfo.courseInfo.isGroup)) && (
@@ -722,9 +783,6 @@ function App() {
                                  <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> TOTAL ECTS: {popupInfo.courseInfo.ects}</p>
                             </div>
                         )}
-                    </div>
-                )}
-
             </div>
             {/* Sidebar */}
             <div className="bg-grey-300 h-screen flex flex-col border-l border-gray-300 w-[250px]">
@@ -764,7 +822,7 @@ function App() {
                                     className="p-3 rounded cursor-pointer"
                                 >
                                     <p>
-                                        {course.name} ({course.year})</p>
+                                        {course.name} ({course.year}) ({course.learning_outcomes})</p>
                                 </div>
                             </li>
                         ))}
@@ -777,10 +835,71 @@ function App() {
                 >
                     Import All Courses
                 </button>
-            </div>
+                <div>
+                    <div>
+                        <button onClick={handleOpenSidebar} className="uppercase w-full p-4 text-white border-t cursor-pointer text-center bg-purple-600 hover:bg-purple-700">
+                        {isSidebarOpen ? "Close Work Summary" : "View Work Summary"}
+                        </button>
+                    </div>
+                    {isSidebarOpen && (
+                        <div
+                        style={{
+                            width: "300px",
+                            backgroundColor: "#f9f9f9",
+                            boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
+                            padding: "20px",
+                            position: "fixed",
+                            top: 0,
+                            right: 0,
+                            height: "100%",
+                            overflowY: "auto",
+                        }}
+                        >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <h2 style={{ fontWeight: "bold", fontSize: "24px", marginBottom: "20px" }}  >Work Summary</h2>
+                            <button
+                            onClick={() => setIsSidebarOpen(false)}
+                            style={{
+                                backgroundColor: "red",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "5px",
+                                padding: "5px 10px",
+                                cursor: "pointer",
+                            }}
+                            >
+                            Close
+                            </button>
+                        </div>
+                        <h3 style={{ fontWeight: "bold", fontSize: "18px", marginTop: "10px" }}>Assignments Types</h3>
+                        {Object.keys(workSummary).length === 0 ? (
+                        <p>No work assigned yet.</p>
+                        ) : (
+                        <ul>
+                            {Object.entries(workSummary).map(([category, count], index) => (
+                            <li key={index}>
+                                {category}: {count}
+                            </li>
+                            ))}
+                        </ul>
+                        )}
 
-
-
+                        <h3 style={{ fontWeight: "bold", fontSize: "18px", marginTop: "20px" }}>Topics Studied</h3>
+                        {topics.size === 0 ? (
+                        <p>No topics assigned yet.</p>
+                        ) : (
+                        <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
+                            {[...topics].map((topic, index) => (
+                            <li key={index} style={{ marginBottom: "5px" }}>
+                                {topic}
+                            </li>
+                            ))}
+                        </ul>
+                        )}
+                        </div>
+                        )}
+                    </div>
+            </div>  
 
         </div>
     );
