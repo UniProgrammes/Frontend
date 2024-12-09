@@ -56,28 +56,39 @@ export interface Course {
   learning_outcomes: string[];
   prerequisites: string[];
   year: number;
+  semester: number;
 }
 
 export interface StudyPlan {
-  id: string,
-  created_at: string,
-  updated_at: string,
-  name: string,
-  status: string,
-  user: number,
-  courses: string[]
+  id: string;
+  created_at: string;
+  updated_at: string;
+  name: string;
+  status: string;
+  user: number;
+  courses: string[];
 }
 
 export interface StudyPlanGetResponse {
-  count: number,
-  next: string | null,
-  previous: string | null,
+  count: number;
+  next: string | null;
+  previous: string | null;
   results: StudyPlan[];
 }
 
 export interface CourseListPost {
     id: string;
     semester: number;
+}
+
+export interface ValidRequisitesResponse {
+    is_valid: boolean;
+    not_satisfied_prerequisites: {course: string, prerequisite: string}[];
+}
+
+export interface ValidCourses {
+    is_valid: boolean;
+    not_satisfied_prerequisites: {course: Course, prerequisite: Course}[];
 }
 
 // Create axios instance
@@ -148,8 +159,7 @@ export const getCoursesFromStudyPlan = async (studyPlanId: string) => {
 }
 
 export const addCoursesToStudyPlan = async (studyPlan: StudyPlan, courses: {courses: CourseListPost[]}) => {
-  const response = await client.post(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  const response = await client.post<void>(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
   return response.data;
 }
 
@@ -159,8 +169,7 @@ export const updateStudyPlan = async (studyPlanId: string, studyPlanName: {name:
 };
 
 export const deleteCoursesFromStudyPlan = async (studyPlan: StudyPlan, courses: {courses_ids: string[]}) => {
-  const response = await client.post(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  const response = await client.delete<void>(`/v1/study-plans/${studyPlan.id}/courses/`, {data: courses});
   return response.data;
 }
 
@@ -183,3 +192,13 @@ export const getLearningOutcome = async (id: string) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return response.data; 
 };
+
+export const getCourseById = async (courseId: string) => {
+  const response = await client.get<Course>(`/v1/courses/${courseId}`);
+  return response.data;
+}
+
+export const validatePrerequisites = async (studyPlan: StudyPlan) => {
+  const response = await client.get<ValidRequisitesResponse>(`/v1/study-plans/${studyPlan.id}/validate-prerequisites`);
+  return response.data;
+}

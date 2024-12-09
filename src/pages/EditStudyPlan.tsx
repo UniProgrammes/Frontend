@@ -5,7 +5,7 @@ import { useParams } from "wouter";
 
 import { RouteParams } from "./ViewStudyPlan";
 
-import { addCoursesToStudyPlan, Course, CourseListPost, deleteCoursesFromStudyPlan, getAllCourses, getAllProgrammes, getCoursesFromStudyPlan, getStudyPlan, Programme, StudyPlan, updateStudyPlan } from "~/api";
+import { addCoursesToStudyPlan, Course, deleteCoursesFromStudyPlan, getAllCourses, getAllProgrammes, getCoursesFromStudyPlan, getStudyPlan, Programme, updateStudyPlan } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
 
@@ -20,10 +20,8 @@ function EditStudyPlan() {
     const [loading, setLoading] = useState(true);
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
     const [error, setError] = useState<string | null>(null);
-    const [coursesToAdd, setCoursesToAdd] = useState<CourseListPost[]>([]);
-    const [coursesToDelete, setCoursesToDelete] = useState<string[]>([]);
-    const [studyPlan, setStudyPlan] = useState<StudyPlan>();
     const [studyPlanName, setStudyPlanName] = useState<string>("");
+    const [newCourses, setNewCourses] = useState<Course[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -41,7 +39,7 @@ function EditStudyPlan() {
                 } else {
                     setProgrammes(programmesData);
                 }
-
+                
                 if (!coursesData || coursesData.length === 0) {
                     setError(prev => prev ? `${prev}, No courses available` : "No courses available");
                     setCourses([]);
@@ -75,17 +73,18 @@ function EditStudyPlan() {
     }, [selectedProgramme, courses, programmes]);
 
     useEffect(() => {
+
         async function loadStudyPlanInfo() {
             const res = await getStudyPlan(id);
-            setStudyPlan(res);
-            setStudyPlanName(studyPlan ? studyPlan.name : "");
+            setStudyPlanName(res ? res.name : "");
             const fetchedCourses = await getCoursesFromStudyPlan(id);
             setSelectedCourses(fetchedCourses.data);
+            setNewCourses(fetchedCourses.data);
         }
 
         loadStudyPlanInfo();
 
-    }, [id, studyPlan])
+    }, [id]);
 
     const handleProgramTreeClick = () => {
         window.location.href = "/plantree";
@@ -94,37 +93,45 @@ function EditStudyPlan() {
     const handleCourseSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const courseId = event.target.value;
         const selectedCourse = courses.find(course => course.id === courseId);
-        if (selectedCourse && !selectedCourses.some(course => course.id === courseId)) {
-            setSelectedCourses([...selectedCourses, selectedCourse]);
-        }
-
-        if(!selectedCourses.map((course) => course.id).includes(courseId)) {
-            setCoursesToAdd([...coursesToAdd, {id: courseId, semester: 2}])
+        if (selectedCourse && !newCourses.some(course => course.id === courseId)) {
+            setNewCourses([...newCourses, selectedCourse]);
         }
     };
 
     const handleRemoveCourse = (courseId: string) => {
-        setSelectedCourses(prevCourses => 
+        setNewCourses(prevCourses => 
             prevCourses.filter(course => course.id !== courseId)
         );
-
-        if(!coursesToDelete.includes(courseId)){
-            setCoursesToDelete([...coursesToDelete, courseId]);
-        }
     };
 
     const handleUpdateStudyPlan = () => {
         async function updatePlan() {
-            await updateStudyPlan(id, {name: studyPlanName ? studyPlanName : ""});
-            if(coursesToDelete.length > 0) {
-                await deleteCoursesFromStudyPlan(studyPlan!, {courses_ids: coursesToDelete});
-            }
 
-            if(coursesToAdd.length > 0) {
-                await addCoursesToStudyPlan(studyPlan!, {courses: coursesToAdd});
-            }
+            try {
 
-            navigate(`/study-plan/${studyPlan?.id}`);
+                const updatedStudyPlan = await updateStudyPlan(id, {name: studyPlanName});
+                
+                // Delete previous courses and add the new ones
+                if(selectedCourses.length !== 0) {
+                    const deleteCourses = selectedCourses.map(course => course.id);
+                    const bodyRequst = {courses_ids: deleteCourses};
+                    deleteCoursesFromStudyPlan(updatedStudyPlan, bodyRequst);
+                }
+    
+                const addCourses = newCourses.map((course) => {
+                    return {
+                        id: course.id,
+                        semester: 2
+                    }
+                });
+
+                addCoursesToStudyPlan(updatedStudyPlan, {courses: addCourses});
+    
+            } catch (_) {
+                
+            } finally {
+                navigate("/dashboard");
+            }
         }
 
         updatePlan();
@@ -189,8 +196,8 @@ function EditStudyPlan() {
 
     const renderSelectedCourses = () => (
         <div id="selected-courses" className="w-full space-y-4">
-            {selectedCourses.length > 0 ? (
-                selectedCourses.map((course) => (
+            {newCourses.length > 0 ? (
+                newCourses.map((course) => (
                     <CourseCard 
                         key={course.id}
                         name={course.name}
@@ -198,6 +205,7 @@ function EditStudyPlan() {
                         code={course.code}
                         educational_level={course.educational_level}
                         description={course.description}
+                        semester={course.semester}
                         onRemove={() => handleRemoveCourse(course.id)}
                     />
                 ))
