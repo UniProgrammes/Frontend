@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan } from "~/api";
+import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
 interface Programme {
@@ -11,20 +11,6 @@ interface Programme {
   created_at: string;
   updated_at: string;
   courses: string[];
-}
-
-interface Course {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  name: string;
-  code: string;
-  credits: string;
-  educational_level: string;
-  description: string;
-  main_area: string;
-  learning_outcomes: string[];
-  prerequisites: string[];
 }
 
 function CreatePlan() {
@@ -191,6 +177,7 @@ function CreatePlan() {
                         code={course.code}
                         educational_level={course.educational_level}
                         description={course.description}
+                        semester={course.semester}
                         onRemove={() => handleRemoveCourse(course.code)}
                     />
                 ))
