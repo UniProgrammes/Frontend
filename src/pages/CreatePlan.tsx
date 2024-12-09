@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course } from "~/api";
+import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course, getAllStudyPlans } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
 interface Programme {
@@ -193,20 +193,27 @@ function CreatePlan() {
         setModalOpen(true);
       };
     
-      const handleModalSave = () => {
+    const handleModalSave = async () => {
         if (!planName.trim()) {
-          alert("Please enter a valid name for the study plan.");
-          return;
+            alert("Please enter a valid name for the study plan.");
+            return;
         }
+
+        const studyPlan = await getAllStudyPlans();
+        if(studyPlan.filter(plan => plan.name === planName).length != 0) {
+            alert("You cannot have two study plans with the same name");
+            return;
+        }
+
         setModalOpen(false); 
         handleCreateStudyPlan(planName); 
         setPlanName(""); 
-      };
-    
-      const handleModalClose = () => {
+    };
+
+    const handleModalClose = () => {
         setModalOpen(false);
         setPlanName(""); 
-      };
+    };
 
     return (
         <div className="flex flex-row max-h-full max-w-full">
