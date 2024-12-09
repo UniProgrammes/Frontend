@@ -1,4 +1,5 @@
 import { Node, NodeProps } from "@xyflow/react";
+
 import { BaseNode } from "~/components/base-node";
 
 type LabeledGroupNode = Node<{
@@ -6,6 +7,7 @@ type LabeledGroupNode = Node<{
   style?: React.CSSProperties;
 }>;
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export function LabeledGroupNode({ data, selected }: NodeProps<LabeledGroupNode>) {
   return (
     <BaseNode
