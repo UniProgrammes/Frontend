@@ -141,6 +141,10 @@ function EditStudyPlan() {
         setStudyPlanName(e.target.value);
     }
 
+    const handleRemoveAllCourses = () => {
+        setNewCourses([]);
+    }
+
     const renderProgrammeSelect = () => (
         <div id="choose-program" className="flex items-center justify-between bg-[#C3AAEA] rounded-xl h-16 p-2 m-8">
             <h1 className="text-2xl text-black">
@@ -246,12 +250,20 @@ function EditStudyPlan() {
                                         onChange={handleChangeName}
                                         className="text-xl p-2 rounded-lg"/>
                                 </div>
-                                <button 
-                                    className="block text-xl w-auto m-4 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
-                                    onClick={handleUpdateStudyPlan}
-                                >
-                                    Update Plan
-                                </button>
+                                <div className="flex flex-col">
+                                    <button 
+                                        className="block text-xl w-auto m-2 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
+                                        onClick={handleUpdateStudyPlan}
+                                    >
+                                        Update Plan
+                                    </button>
+                                    <button 
+                                        className="block text-xl w-auto m-2 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
+                                        onClick={handleRemoveAllCourses}
+                                    >
+                                        Remove all courses
+                                    </button>
+                                </div>
                             </div>
 
                             {renderProgrammeSelect()}
