@@ -190,6 +190,15 @@ function CreatePlan() {
     );
 
     const handleSaveClick = () => {
+        const totalCredits = selectedCourses.reduce((acc, current) => parseFloat(current.credits) + acc, 0);
+        const programme = programmes.filter((program) => program.id === selectedProgramme)[0];
+        if(totalCredits > parseFloat(programme.credits)) {
+            alert("You cannot course more credits than the assigned by the program\n"
+                + `Total: ${totalCredits} ECTS || Limit: ${programme.credits} ECTS`
+            );
+
+            return;
+        }
         setModalOpen(true);
       };
     
