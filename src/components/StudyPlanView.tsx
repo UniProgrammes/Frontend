@@ -117,6 +117,7 @@ const StudyPlanView: React.FC<StudyPlanViewParams> = ({ id, name, courses, valid
                             courses.length > 0
                             ? courses.map((course) => (
                                 <CourseViewCard
+                                    key={course.id}
                                     course={course}
                                 />
                             ))
