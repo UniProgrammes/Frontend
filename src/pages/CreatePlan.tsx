@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 
+import { useNavigate } from "react-router-dom";
+
 import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course, getAllStudyPlans } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
@@ -23,6 +25,8 @@ function CreatePlan() {
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
     const [isModalOpen, setModalOpen] = useState(false);
     const [planName, setPlanName] = useState("");
+    
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -97,20 +101,29 @@ function CreatePlan() {
     };
 
     const handleCreateStudyPlan = (planName: string) => {
+
         async function savePlan() {
-            const body = {name: planName };
-            const studyPlan = await saveStudyPlan(body);
-
-            const bodyRequest = selectedCourses.map((c) => {
-                return {
-                    id: c.id,
-                    semester: 2
-                }
+            const body = { name: planName };
+            await saveStudyPlan(body).then((studyPlan) => {
+                const bodyRequest = selectedCourses.map((c) => {
+                    return {
+                        id: c.id,
+                        semester: 2
+                    }
+                });
+                addCoursesToStudyPlan(studyPlan.id, { courses: bodyRequest });
+            }).catch((error) => {
+                throw error;
             });
-
-            addCoursesToStudyPlan(studyPlan, {courses: bodyRequest});
         }
-        savePlan();
+
+        savePlan()
+        .then(() => navigate("/dashboard"))
+        .catch(() => {
+            //We can log the error here
+            //TODO: Change alert to a modal
+            alert("Failed to save study plan. Please try again later.");
+        });
     }
 
     const renderProgrammeSelect = () => (
