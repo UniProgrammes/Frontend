@@ -8,8 +8,6 @@ import { RouteParams } from "./ViewStudyPlan";
 import { addCoursesToStudyPlan, Course, deleteCoursesFromStudyPlan, getAllCourses, getAllProgrammes, getCoursesFromStudyPlan, getStudyPlan, Programme, updateStudyPlan } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
-
-
 function EditStudyPlan() {
     const { id } = useParams<RouteParams>();
     const navigate = useNavigate();
@@ -125,7 +123,7 @@ function EditStudyPlan() {
                     }
                 });
 
-                addCoursesToStudyPlan(updatedStudyPlan, {courses: addCourses});
+                addCoursesToStudyPlan(updatedStudyPlan.id, {courses: addCourses});
     
             } catch (_) {
                 
