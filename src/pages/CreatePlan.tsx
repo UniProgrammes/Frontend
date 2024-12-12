@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 
-import { Filter } from "bad-words"; 
-
 import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course } from "~/api";
 import CourseCard from "~/components/CourseCard";
+import { checkName } from "~/lib/utils";
 
 interface Programme {
   id: string;
@@ -15,7 +14,6 @@ interface Programme {
   courses: string[];
 }
 
-const filter: Filter = new Filter();
 
 function CreatePlan() {
     const [programmes, setProgrammes] = useState<Programme[]>([]);
@@ -27,7 +25,6 @@ function CreatePlan() {
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
     const [isModalOpen, setModalOpen] = useState(false);
     const [planName, setPlanName] = useState("");
-    const [isButtonDisabled, setSaveDisabled] = useState(false);
     const [PlanNameErrorMessage, setPlanNameErrorMessage] = useState<string>("");
 
     useEffect(() => {
@@ -107,30 +104,10 @@ function CreatePlan() {
         checkName(newName).then(() => {
             setPlanName(newName);
             setPlanNameErrorMessage("");
-            setSaveDisabled(false);
         })
         .catch((error: Error) => {
             setPlanNameErrorMessage(error.message);
             setPlanName(newName);
-            setSaveDisabled(true);
-        });
-    };
-
-    // Function to check the name
-    const checkName = async (planName: string): Promise<boolean> => {
-        return new Promise((resolve, reject) => {
-           
-            const regex = /^[a-zA-Z0-9 ]+$/;
-            if (!regex.test(planName)) {
-                reject(new Error("Invalid name"));
-            }
-
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            if (filter.isProfane(planName)) {
-                reject(new Error("Invalid name"));
-            }
-            
-            resolve(true);
         });
     };
 
@@ -245,12 +222,7 @@ function CreatePlan() {
         setPlanName(""); 
       };
 
-    const inputStyle = {
-        borderColor: PlanNameErrorMessage ? "red" : undefined,
-        borderWidth: PlanNameErrorMessage ? "2px" : undefined,
-        borderStyle: PlanNameErrorMessage ? "solid" : undefined,
-        padding: PlanNameErrorMessage ? "8px": undefined
-    };
+    const inputStyle = PlanNameErrorMessage ? "border-red-500 border-2 p-2" : "p-2";
 
     return (
         <div className="flex flex-row max-h-full max-w-full">
@@ -271,7 +243,7 @@ function CreatePlan() {
                                     Create your study plan
                                 </h1> 
                                 <button 
-                                    className="block text-xl w-auto m-4 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
+                                        className="block text-xl w-auto m-4 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600 disabled:opacity-50"
                                     disabled={selectedCourses.length === 0}
                                     onClick={handleSaveClick}
                                 >
@@ -288,8 +260,8 @@ function CreatePlan() {
                                 <h1 className="text-2xl text-black">Selected Courses</h1> 
                                 <button 
                                     onClick={handleProgramTreeClick} 
-                                    className="block text-xl w-1/3 m-4 h-10 p-2 rounded-lg text-white text-center text-bold bg-purple-600"
-                                    disabled={!selectedProgramme}
+                                    className="block text-xl w-1/3 m-4 h-10 p-2 rounded-lg text-white text-center text-bold bg-purple-600 "
+                                    disabled={selectedCourses.length === 0}
                                 >
                                     See Programme Tree
                                 </button>
@@ -305,20 +277,20 @@ function CreatePlan() {
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
                 <div className="bg-white rounded-xl shadow-lg p-6 w-96">
                     <h2 className="text-xl font-bold text-center mb-4">Name Your Study Plan</h2>
-                    <input
-                    type="text"
-                    value={planName}
-                    onChange={handleNameChange}
-                    placeholder="Enter study plan name"
-                    className="w-full p-2 border rounded-lg mb-4"
-                    style={inputStyle}
-                    />
-
-                    {PlanNameErrorMessage && (
-                    <div style={{ color: "red", marginTop: "8px" }}>
-                        {PlanNameErrorMessage}
+                    <div className="mb-4">
+                        <input
+                            type="text"
+                            value={planName}
+                            onChange={handleNameChange}
+                            placeholder="Enter study plan name"
+                            className={`w-full border rounded-lg ${inputStyle} focus:${inputStyle}`}
+                        />
+                        {PlanNameErrorMessage && (
+                            <p className="mt-2 pl-1 text-pink-600 text-sm">
+                                {PlanNameErrorMessage}
+                            </p>
+                        )}
                     </div>
-                    )}
 
                     <div className="flex justify-end space-x-4">
                     <button
@@ -330,7 +302,7 @@ function CreatePlan() {
                     <button
                         className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50"
                         onClick={handleModalSave}
-                        disabled={isButtonDisabled}
+                        disabled={PlanNameErrorMessage !== ""}
                     >
                         Save
                     </button>
