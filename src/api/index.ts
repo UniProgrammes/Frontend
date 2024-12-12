@@ -158,8 +158,8 @@ export const getCoursesFromStudyPlan = async (studyPlanId: string) => {
   return response;
 }
 
-export const addCoursesToStudyPlan = async (studyPlan: StudyPlan, courses: {courses: CourseListPost[]}) => {
-  const response = await client.post<void>(`/v1/study-plans/${studyPlan.id}/courses/`, courses);
+export const addCoursesToStudyPlan = async (studyPlanId: string, courses: {courses: CourseListPost[]}) => {
+  const response = await client.post<void>(`/v1/study-plans/${studyPlanId}/courses/`, courses);
   return response.data;
 }
 
