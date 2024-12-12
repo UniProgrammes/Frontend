@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 
+import { Filter } from "bad-words"; 
+
 import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
@@ -13,6 +15,8 @@ interface Programme {
   courses: string[];
 }
 
+const filter: Filter = new Filter();
+
 function CreatePlan() {
     const [programmes, setProgrammes] = useState<Programme[]>([]);
     const [courses, setCourses] = useState<Course[]>([]);
@@ -23,6 +27,8 @@ function CreatePlan() {
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
     const [isModalOpen, setModalOpen] = useState(false);
     const [planName, setPlanName] = useState("");
+    const [isButtonDisabled, setSaveDisabled] = useState(false);
+    const [PlanNameErrorMessage, setPlanNameErrorMessage] = useState<string>("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -96,6 +102,38 @@ function CreatePlan() {
         );
     };
 
+    const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newName = event.target.value;
+        checkName(newName).then(() => {
+            setPlanName(newName);
+            setPlanNameErrorMessage("");
+            setSaveDisabled(false);
+        })
+        .catch((error: Error) => {
+            setPlanNameErrorMessage(error.message);
+            setPlanName(newName);
+            setSaveDisabled(true);
+        });
+    };
+
+    // Function to check the name
+    const checkName = async (planName: string): Promise<boolean> => {
+        return new Promise((resolve, reject) => {
+           
+            const regex = /^[a-zA-Z0-9 ]+$/;
+            if (!regex.test(planName)) {
+                reject(new Error("Invalid name"));
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            if (filter.isProfane(planName)) {
+                reject(new Error("Invalid name"));
+            }
+            
+            resolve(true);
+        });
+    };
+
     const handleCreateStudyPlan = (planName: string) => {
         async function savePlan() {
             const body = {name: planName };
@@ -107,7 +145,6 @@ function CreatePlan() {
                     semester: 2
                 }
             });
-
             addCoursesToStudyPlan(studyPlan, {courses: bodyRequest});
         }
         savePlan();
@@ -208,6 +245,13 @@ function CreatePlan() {
         setPlanName(""); 
       };
 
+    const inputStyle = {
+        borderColor: PlanNameErrorMessage ? "red" : undefined,
+        borderWidth: PlanNameErrorMessage ? "2px" : undefined,
+        borderStyle: PlanNameErrorMessage ? "solid" : undefined,
+        padding: PlanNameErrorMessage ? "8px": undefined
+    };
+
     return (
         <div className="flex flex-row max-h-full max-w-full">
             <div id="main-content" className="w-full flex flex-col">
@@ -256,6 +300,7 @@ function CreatePlan() {
                     )}
                 </main>
             </div>
+            
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
                 <div className="bg-white rounded-xl shadow-lg p-6 w-96">
@@ -263,10 +308,18 @@ function CreatePlan() {
                     <input
                     type="text"
                     value={planName}
-                    onChange={(e) => setPlanName(e.target.value)}
+                    onChange={handleNameChange}
                     placeholder="Enter study plan name"
                     className="w-full p-2 border rounded-lg mb-4"
+                    style={inputStyle}
                     />
+
+                    {PlanNameErrorMessage && (
+                    <div style={{ color: "red", marginTop: "8px" }}>
+                        {PlanNameErrorMessage}
+                    </div>
+                    )}
+
                     <div className="flex justify-end space-x-4">
                     <button
                         className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
@@ -275,8 +328,9 @@ function CreatePlan() {
                         Cancel
                     </button>
                     <button
-                        className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+                        className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50"
                         onClick={handleModalSave}
+                        disabled={isButtonDisabled}
                     >
                         Save
                     </button>
