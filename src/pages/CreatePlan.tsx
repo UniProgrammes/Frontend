@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course, getAllStudyPlans } from "~/api";
 import CourseCard from "~/components/CourseCard";
+import { checkName } from "~/lib/utils";
 
 interface Programme {
   id: string;
@@ -15,6 +16,7 @@ interface Programme {
   courses: string[];
 }
 
+
 function CreatePlan() {
     const [programmes, setProgrammes] = useState<Programme[]>([]);
     const [courses, setCourses] = useState<Course[]>([]);
@@ -25,8 +27,8 @@ function CreatePlan() {
     const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
     const [isModalOpen, setModalOpen] = useState(false);
     const [planName, setPlanName] = useState("");
-    
     const navigate = useNavigate();
+    const [PlanNameErrorMessage, setPlanNameErrorMessage] = useState<string>("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -98,6 +100,18 @@ function CreatePlan() {
         setSelectedCourses(prevCourses => 
             prevCourses.filter(course => course.code !== courseCode)
         );
+    };
+
+    const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newName = event.target.value;
+        checkName(newName).then(() => {
+            setPlanName(newName);
+            setPlanNameErrorMessage("");
+        })
+        .catch((error: Error) => {
+            setPlanNameErrorMessage(error.message);
+            setPlanName(newName);
+        });
     };
 
     const handleCreateStudyPlan = (planName: string) => {
@@ -237,6 +251,8 @@ function CreatePlan() {
         setPlanName(""); 
     };
 
+    const inputStyle = PlanNameErrorMessage ? "border-red-500 border-2 p-2" : "p-2";
+
     return (
         <div className="flex flex-row max-h-full max-w-full">
             <div id="main-content" className="w-full flex flex-col">
@@ -256,7 +272,7 @@ function CreatePlan() {
                                     Create your study plan
                                 </h1> 
                                 <button 
-                                    className="block text-xl w-auto m-4 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
+                                        className="block text-xl w-auto m-4 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600 disabled:opacity-50"
                                     disabled={selectedCourses.length === 0}
                                     onClick={handleSaveClick}
                                 >
@@ -273,8 +289,8 @@ function CreatePlan() {
                                 <h1 className="text-2xl text-black">Selected Courses</h1> 
                                 <button 
                                     onClick={handleProgramTreeClick} 
-                                    className="block text-xl w-1/3 m-4 h-10 p-2 rounded-lg text-white text-center text-bold bg-purple-600"
-                                    disabled={!selectedProgramme}
+                                    className="block text-xl w-1/3 m-4 h-10 p-2 rounded-lg text-white text-center text-bold bg-purple-600 "
+                                    disabled={selectedCourses.length === 0}
                                 >
                                     See Programme Tree
                                 </button>
@@ -285,17 +301,26 @@ function CreatePlan() {
                     )}
                 </main>
             </div>
+            
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
                 <div className="bg-white rounded-xl shadow-lg p-6 w-96">
                     <h2 className="text-xl font-bold text-center mb-4">Name Your Study Plan</h2>
-                    <input
-                    type="text"
-                    value={planName}
-                    onChange={(e) => setPlanName(e.target.value)}
-                    placeholder="Enter study plan name"
-                    className="w-full p-2 border rounded-lg mb-4"
-                    />
+                    <div className="mb-4">
+                        <input
+                            type="text"
+                            value={planName}
+                            onChange={handleNameChange}
+                            placeholder="Enter study plan name"
+                            className={`w-full border rounded-lg ${inputStyle} focus:${inputStyle}`}
+                        />
+                        {PlanNameErrorMessage && (
+                            <p className="mt-2 pl-1 text-pink-600 text-sm">
+                                {PlanNameErrorMessage}
+                            </p>
+                        )}
+                    </div>
+
                     <div className="flex justify-end space-x-4">
                     <button
                         className="px-4 py-2 text-white bg-gray-500 rounded-lg hover:bg-gray-600"
@@ -304,8 +329,9 @@ function CreatePlan() {
                         Cancel
                     </button>
                     <button
-                        className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+                        className="px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50"
                         onClick={handleModalSave}
+                        disabled={PlanNameErrorMessage !== ""}
                     >
                         Save
                     </button>
