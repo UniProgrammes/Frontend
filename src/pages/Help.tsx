@@ -1,17 +1,32 @@
 import React, { useState } from "react";
+import { sendHelpMessage } from "../api/helpApi"; 
 
 const Help: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setName("");
-    setEmail("");
-    setMessage("");
-  };
+    setSuccess(false);
+    setError("");
 
+    try {
+      const data = {
+        question_text: message,
+        user_email: email,
+      };
+      await sendHelpMessage(data);
+      setSuccess(true);
+      setName("");
+      setEmail("");
+      setMessage("");
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center relative bg-purple-500 overflow-hidden">
@@ -24,6 +39,10 @@ const Help: React.FC = () => {
         <p className="text-gray-600 mb-6">
           We're here to help you out whenever you run into a problem.
         </p>
+        {success && (
+          <div className="mb-4 text-green-500">Message sent successfully!</div>
+        )}
+        {error && <div className="mb-4 text-red-500">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <input
