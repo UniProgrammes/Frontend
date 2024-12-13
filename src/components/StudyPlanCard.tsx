@@ -1,6 +1,6 @@
 import React from "react";
 
-import { useNavigate } from "react-router-dom";
+import { FaPencilAlt, FaEye, FaTrashAlt } from 'react-icons/fa';
 
 interface StudyPlanCardProps {
     id: string,
@@ -27,16 +27,19 @@ const StudyPlanCard: React.FC<StudyPlanCardProps> = ({ id, name, completed, numC
       <p className="m-2"> {numCourses} courses selected</p>
       <p className="m-2 mb-8">Last Updated on: {lastUpdate}</p>
       <button 
-        onClick={() => {navigate(`/study-plan/${id}`)}}
-        className="px-4 py-2 bg-purple-500 hover:bg-purple-700 text-white rounded-full text-center w-full">
-        {completed ? "View" : "Modify"} Study Plan
+          onClick={() => {navigate(`/study-plan/${id}`)}}
+          className="px-4 py-2 bg-purple-500 hover:bg-purple-700 text-white rounded-full text-center w-full">
+          {completed ? (
+              <FaEye className="h-6 w-6 text-white" />
+          ) : (
+              <FaPencilAlt className="h-6 w-6 text-white" />
+          )}
       </button>
       <button
-          onClick={handleDelete}
-          className="px-4 py-2 bg-purple-500 hover:bg-purple-700 text-white rounded-full text-center w-full mt-4"
-        >
-          Delete Study Plan
-        </button>
+        onClick={handleDelete}
+        className="px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-full text-center w-full mt-4">
+          <FaTrashAlt className="h-6 w-6 text-white" />
+      </button>
     </div>
   )
 }
