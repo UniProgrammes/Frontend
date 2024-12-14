@@ -19,7 +19,7 @@ const SideBar: React.FC = () => {
   return (
     <div className="w-64">
       <nav id="side-bar" className="bg-purple-500 h-screen flex flex-col">
-        <h1 className="p-4 text-2xl text-white font-bold">
+        <h1 className="text-2xl text-white font-bold flex items-center justify-center h-20">
           UniProgrammes
         </h1>
         <div className="flex-1 mt-6">
@@ -38,12 +38,9 @@ const SideBar: React.FC = () => {
             ))}
           </ul>
         </div>
-        <button className="m-4 bg-neutral-800 text-white rounded-lg w-12 h-8 text-sm">
-          EN
-        </button>
       </nav>
     </div>
-  );
+  );  
 };
 
 export default SideBar;
