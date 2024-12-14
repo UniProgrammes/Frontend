@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 
+import { notification } from "antd"
 import { useNavigate } from "react-router-dom";
 
 import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course, getAllStudyPlans } from "~/api";
@@ -15,7 +16,6 @@ interface Programme {
   updated_at: string;
   courses: string[];
 }
-
 
 function CreatePlan() {
     const [programmes, setProgrammes] = useState<Programme[]>([]);
@@ -132,11 +132,20 @@ function CreatePlan() {
         }
 
         savePlan()
-        .then(() => navigate("/dashboard"))
+        .then(() => {
+            
+            notification.success({
+                message: "Study Plan saved",
+                description: "You have successfully saved your study plan"
+            });
+            
+            navigate("/dashboard")
+        })
         .catch(() => {
-            //We can log the error here
-            //TODO: Change alert to a modal
-            alert("Failed to save study plan. Please try again later.");
+            notification.error({
+                message: "Study Plan",
+                description: "Error on saving study plan. Try again later"
+            });
         });
     }
 
