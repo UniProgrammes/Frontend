@@ -90,6 +90,9 @@ function CreatePlan() {
 
     const handleCourseSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const courseId = event.target.value;
+        if(courseId === "All courses") {
+            setSelectedCourses(filteredCourses);
+        }
         const selectedCourse = courses.find(course => course.id === courseId);
         if (selectedCourse && !selectedCourses.some(course => course.id === courseId)) {
             setSelectedCourses([...selectedCourses, selectedCourse]);
@@ -101,6 +104,10 @@ function CreatePlan() {
             prevCourses.filter(course => course.code !== courseCode)
         );
     };
+
+    const handleRemoveAllCourses = () => {
+        setSelectedCourses([]);
+    }
 
     const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newName = event.target.value;
@@ -190,6 +197,7 @@ function CreatePlan() {
                             : "Select a course"
                         }
                     </option>
+                    <option value="All courses">All courses</option>
                     {filteredCourses.map((course) => (
                         <option key={course.id} value={course.id}>
                             {course.name}
@@ -296,6 +304,13 @@ function CreatePlan() {
                             
                             <div id="current-plan" className="flex flex-row items-center justify-between px-4 py-2">
                                 <h1 className="text-2xl text-black">Selected Courses</h1> 
+                                <button 
+                                    onClick={handleRemoveAllCourses} 
+                                    className={`block text-xl w-1/3 m-4 h-10 p-2 rounded-lg text-white text-center text-bold ${selectedCourses.length !== 0 ? "bg-purple-600" : "bg-gray-400"} `}
+                                    disabled={selectedCourses.length === 0}
+                                >
+                                    Remove all courses
+                                </button>
                                 <button 
                                     onClick={handleProgramTreeClick} 
                                     className="block text-xl w-1/3 m-4 h-10 p-2 rounded-lg text-white text-center text-bold bg-purple-600 "
