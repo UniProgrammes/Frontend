@@ -15,3 +15,7 @@ body {
     --radius: 0.5rem;
   }
 }
+
+.toggle-styling.react-toggle--checked .react-toggle-track {
+  background-color: #ab199f;
+}

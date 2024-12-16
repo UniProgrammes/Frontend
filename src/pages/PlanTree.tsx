@@ -1,12 +1,14 @@
 import React, { useState, useCallback, useEffect } from "react";
 
-import { TrashIcon, CardStackPlusIcon } from "@radix-ui/react-icons";
+import { TrashIcon, CardStackPlusIcon, MixerHorizontalIcon, Cross1Icon } from "@radix-ui/react-icons";
 import { ReactFlow, ReactFlowProvider, MiniMap, Background, Controls, ControlButton, NodeMouseHandler, Node, Edge } from "@xyflow/react";
 import ELK from "elkjs/lib/elk.bundled.js";
 import "@xyflow/react/dist/style.css";
 import { useSearchParams } from "react-router-dom";
+import Toggle from "react-toggle";
+import "react-toggle/style.css"
 
-import { getAllProgrammes, getAllCourses, getLearningOutcome } from "~/api";
+import { getAllProgrammes, getAllCourses, getLearningOutcome, client } from "~/api";
 import { LabeledGroupNode } from "~/components/labeled-group-node";
 
 const nodeTypes = {
@@ -26,25 +28,26 @@ interface Course {
     learning_outcomes: string[];
     prerequisites: string[];
     year: number;
-  }
-  
-  interface ProgrammeStructure {
+    semester: number;
+}
+
+interface ProgrammeStructure {
     program_id: string;
     name: string;
     courses: Course[];
-  }
+}
 
-  interface CustomNode extends Node {
+interface CustomNode extends Node {
     data: {
-      label: string;
-      year: number;
-      description?: string;
-      ects: number;
-      style?: React.CSSProperties | undefined;
-      isGroup: boolean;
-      learning_outcomes: string[];
+        label: string;
+        year: number;
+        description?: string;
+        ects: number;
+        style?: React.CSSProperties | undefined;
+        isGroup: boolean;
+        learning_outcomes: string[];
     };
-  }
+}
 
 const pastelColors = [
     "rgba(102, 153, 255, 1)", // Light Blue
@@ -78,6 +81,17 @@ interface CourseInfo {
     learning_outcomes: string[];
 }
 
+interface OutcomeResponse {
+    id: string;
+    description: string;
+    category: string;
+}
+
+interface Outcome {
+    id: string;
+    description: string;
+}
+
 let undeletableNodes: Set<string> = new Set();
 
 // ELK instance
@@ -85,7 +99,7 @@ const elk = new ELK();
 
 // Helper function to layout the nodes using ELK
 const getLayoutedElements = async (nodes: CustomNode[], edges: Edge[], algorithm: string = "mrtree", nodeNodeBetweenLayers: number = 50) => {
-   
+
     const bookedLayer: Set<number> = new Set();
 
     const elkNodes = nodes.sort((a, b) => a.data.year - b.data.year).map((node: CustomNode) => {
@@ -94,10 +108,9 @@ const getLayoutedElements = async (nodes: CustomNode[], edges: Edge[], algorithm
 
         let proposedLayer = year;
 
-        if(!bookedLayer.has(proposedLayer))
-        {
+        if (!bookedLayer.has(proposedLayer)) {
             bookedLayer.add(proposedLayer);
-        }else{
+        } else {
             proposedLayer = proposedLayer + 1
         }
 
@@ -120,13 +133,13 @@ const getLayoutedElements = async (nodes: CustomNode[], edges: Edge[], algorithm
 
     const layoutOptions = {
         "elk.algorithm": algorithm,
-        "elk.direction": "DOWN", 
+        "elk.direction": "DOWN",
         "elk.alignment": "CENTER",
-        "elk.layered.mergeHierarchies": "false", 
-       
+        "elk.layered.mergeHierarchies": "false",
+
         "elk.layered.allowEmptyLayers": "true",
-        "elk.spacing.nodeNode": "100", 
-        "elk.layered.spacing.nodeNodeBetweenLayers": nodeNodeBetweenLayers.toString(), 
+        "elk.spacing.nodeNode": "100",
+        "elk.layered.spacing.nodeNodeBetweenLayers": nodeNodeBetweenLayers.toString(),
         "elk.layered.spacing.nodeNodeBetweenConnectedNodes": "200",
 
         "elk.layered.crossingMinimization.semiInteractive": "true",
@@ -163,7 +176,7 @@ const getLayoutedElements = async (nodes: CustomNode[], edges: Edge[], algorithm
         });
 
         return layoutedNodes;
-    }).catch(() => { 
+    }).catch(() => {
         return new Array<CustomNode>();
     })
 
@@ -178,7 +191,7 @@ function App() {
     const [edges, setEdges] = useState<Edge[]>([]);
 
     const [courseList, setCourses] = useState<Course[]>([]);
-    const [totalCredits,setTotalCredits] = useState<number>(0);
+    const [totalCredits, setTotalCredits] = useState<number>(0);
     const [searchParams] = useSearchParams();
     const [structure, setStructure] = useState<ProgrammeStructure | null>(null);
     const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
@@ -186,6 +199,16 @@ function App() {
     const [workSummary, setWorkSummary] = useState<{ [category: string]: number }>({});
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [topics, setTopics] = useState<Set<string>>(new Set());
+
+    //Filter related states
+    const [showFilters, setShowFilters] = useState<boolean>(false);
+    const [areaFilter, setAreaFilter] = useState<string | "all">("all");
+    const [outcomeFilter, setOutcomeFilter] = useState<string | "all">("all");
+    const [semesterFilter, setSemesterFilter] = useState<number | string>("all");
+    const [outcomes, setOutcomes] = useState<Outcome[]>([]);
+    const [areas, setAreas] = useState<string[]>([]);
+    const [semesters, setSemesters] = useState<number[]>([]);
+    const [selectHighlighted, setSelectHighlighted] = useState<boolean>(false);
 
     const programmeId = searchParams.get("programmeId");
 
@@ -206,41 +229,69 @@ function App() {
 
             const programmeSelected = programmes.find((p) => p.id === programmeId);
 
-            if(!programmeSelected){
+            if (!programmeSelected) {
                 return;
             }
 
             const programmeCourses = courses.filter((course) =>
                 programmeSelected.courses.includes(course.id))
                 .map((course) => {
-                if (course.prerequisites.length === 0) {
-                    course.prerequisites.push("1");
-                }
-                if (course.year === undefined) {
-                    //Just to handle the course year for the moment
-                    if (course.prerequisites.includes("1")){
-                        course.year = 1;
-                    }else{
-                        const prerequisiteCourse = courses.find((c) => c.id === course.prerequisites[0]);
-                        if (prerequisiteCourse) {
-                            course.year = (prerequisiteCourse.year || 0) + 1;
+                    if (course.prerequisites.length === 0) {
+                        course.prerequisites.push("1");
+                    }
+                    if (course.year === undefined) {
+                        //Just to handle the course year for the moment
+                        if (course.prerequisites.includes("1")) {
+                            course.year = 1;
+                        } else {
+                            const prerequisiteCourse = courses.find((c) => c.id === course.prerequisites[0]);
+                            if (prerequisiteCourse) {
+                                course.year = (prerequisiteCourse.year || 0) + 1;
+                            }
                         }
                     }
-                }
 
-                return course;
-                }); 
+                    return course;
+                });
             setCourses(programmeCourses);
 
             const programmeStructure: ProgrammeStructure = {
                 program_id: programmeSelected.id,
                 name: programmeSelected.name,
                 courses: programmeCourses,
-              };            
-          setStructure(programmeStructure);
+            };
+            setStructure(programmeStructure);
         };
         fetchStructure();
-      }, [programmeId]);
+    }, [programmeId]);
+
+    useEffect(() => {
+        // Add filter data
+        setAreas(Array.from(new Set(courseList.map(course => (
+            course.main_area
+        )))));
+        const allLearningOutcomes = Array.from(new Set(courseList.map(course => (
+            course.learning_outcomes
+        )).flat()));
+        // Fetch all the learning outcomes descriptions
+        const outcomeRequests = allLearningOutcomes.map(async outcome => (
+            client.get<OutcomeResponse>(`/v1/learning-outcomes/${outcome}`)
+        ))
+        const getOutcomeData = async () => {
+            const outcomeResponses = (await Promise.all(outcomeRequests)).map(res => ({
+                id: res.data.id,
+                description: res.data.description
+            }));
+            setOutcomes(outcomeResponses);
+        }
+        getOutcomeData();
+
+        //Handle setting semesters
+        const allSemesters = Array.from(new Set(courseList.map(course => (
+            course.semester
+        ))));
+        setSemesters(allSemesters);
+    }, [courseList])
 
     useEffect(() => {
         if (!structure) return;
@@ -248,23 +299,23 @@ function App() {
         undeletableNodes.clear();
 
         const newNodes: CustomNode[] = [
-            { 
+            {
                 id: "1",
-                type: "input", 
-                data: 
-                { 
-                    label: structure.name,  
-                    ects: 0, 
-                    year: 0, 
+                type: "input",
+                data:
+                {
+                    label: structure.name,
+                    ects: 0,
+                    year: 0,
                     description: "",
                     isGroup: false,
                     learning_outcomes: []
                 },
-                position: 
-                { 
-                    x: 250, 
-                    y: 5 
-                } 
+                position:
+                {
+                    x: 250,
+                    y: 5
+                }
             },
         ];
 
@@ -283,10 +334,10 @@ function App() {
         const newTotalCredits = nodes.reduce((total, node) => {
             const credits: number = node.data.ects;
             if (credits && !isNaN(credits)) {
-              return total + credits; 
+                return total + credits;
             }
             return total;
-          }, 0);
+        }, 0);
         setTotalCredits(newTotalCredits);
     }, [structure, nodes]);
 
@@ -295,16 +346,16 @@ function App() {
         // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
         const summary: { [category: string]: number } = {};
         const uniqueTopics: Set<string> = new Set();
-    
+
         for (const node of nodes) {
-            if (node.id === "1") continue; 
-    
+            if (node.id === "1") continue;
+
             // Fetch learning outcomes for this node
             const learningOutcomes = await Promise.all(
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/promise-function-async
                 node.data.learning_outcomes.map((outcomeId: string) => getLearningOutcome(outcomeId))
             );
-    
+
             for (const outcome of learningOutcomes) {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 summary[outcome.category] = (summary[outcome.category] || 0) + 1;
@@ -312,13 +363,13 @@ function App() {
                 uniqueTopics.add(outcome.description);
             }
         }
-    
+
         setWorkSummary(summary);
         setTopics(uniqueTopics);
     }, [nodes]);
-    
+
     useEffect(() => {
-        void calculateSummary(); 
+        void calculateSummary();
     }, [nodes, calculateSummary]);
 
     const onNodeMouseEnter: NodeMouseHandler = useCallback(async (event, node) => {
@@ -329,14 +380,14 @@ function App() {
             setPopupInfo(null);
             return;
         }
-        
+
         const learningOutcomes = await Promise.all(
             customNode.data.learning_outcomes.map(async (outcomeId: string) => getLearningOutcome(outcomeId))
         );
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
         const descriptions = learningOutcomes.map((outcome) => outcome.description);
-       
-        
+
+
         const courseInfo: CourseInfo = {
             label: customNode.data.label,
             year: customNode.data.year,
@@ -377,7 +428,7 @@ function App() {
 
                     const filteredByYear = false;
                     let yearColor = "white";
-                    if(filteredByYear)
+                    if (filteredByYear)
                         yearColor = colorMapping.get(course.year) || "white";
 
                     return {
@@ -407,19 +458,19 @@ function App() {
 
             if (isCourseInTree(course.id)) {
                 alert("Course already in tree");
-                return;  
+                return;
             }
 
             const newNode: CustomNode = {
                 id: course.id,
-                data: { 
-                    label: course.name, 
+                data: {
+                    label: course.name,
                     description: course.description,
-                    ects: parseFloat(course.credits), 
+                    ects: parseFloat(course.credits),
                     year: course.year,
                     isGroup: false,
                     learning_outcomes: course.learning_outcomes
-                 },
+                },
                 position: { x: 0, y: 0 }, // Position will be updated by ELK
             };
 
@@ -492,7 +543,7 @@ function App() {
             const layoutedElements = await getLayoutedElements(newNodes, newEdges);
             // Update node styles
             const styledNodes = updateNodeStyles(layoutedElements.nodes);
-            
+
             //@ts-expect-error - setNodes expect the parsed type of the styledNodes
             setNodes(styledNodes);
             setEdges(layoutedElements.edges);
@@ -580,7 +631,7 @@ function App() {
         // Update node styles
         const styledNodes = updateNodeStyles(layoutedElements.nodes);
 
-        
+
         //@ts-expect-error - setNodes expect the parsed type of the styledNodes
         setNodes(styledNodes);
         setEdges(layoutedElements.edges);
@@ -601,7 +652,7 @@ function App() {
         // Group nodes by their approximate layer (y-position).
         // We'll map each unique y-level to an array of node IDs.
         const layerMap = new Map<number, CustomNode[]>();
-        
+
         // const currentNodes = nodes.filter((node) => node.type == "labeledGroupNode");
 
         // Make sure nodes are laid out before grouping
@@ -631,10 +682,10 @@ function App() {
             const minX = Math.min(...layerNodes.map((n) => n.position.x));
             const maxX = Math.max(...layerNodes.map((n) => n.position.x));
             const minY = Math.min(...layerNodes.map((n) => n.position.y));
-            
+
             // const maxY = Math.max(...layerNodes.map((n) => n.position.y));
 
-            if(minX < globalMinX){
+            if (minX < globalMinX) {
                 globalMinX = minX;
             }
 
@@ -643,7 +694,7 @@ function App() {
             const groupHeight = 350; // Padding for aesthetics
 
 
-            if(groupWidth > globalGroupWidth){
+            if (groupWidth > globalGroupWidth) {
                 globalGroupWidth = groupWidth;
             }
 
@@ -652,17 +703,17 @@ function App() {
             const groupNode: CustomNode = {
                 id: newGroupNodeId,
                 type: "labeledGroupNode",
-                position: { x: globalMinX - 200 , y: minY - 50 },
+                position: { x: globalMinX - 200, y: minY - 50 },
                 width: globalGroupWidth,
                 height: groupHeight,
-                data: { 
+                data: {
                     label: `Year ${year}`,
                     description: "",
                     ects: updatedNodes.filter((n) => layerNodes.some((ln) => ln.id === n.id)).reduce((total, node) => {
                         const ects = node.data.ects;
-                            if (!isNaN(ects)) {
-                                return total + ects;
-                            }
+                        if (!isNaN(ects)) {
+                            return total + ects;
+                        }
                         return total;
                     }, 0),
                     year: year,
@@ -702,10 +753,12 @@ function App() {
         setNodes(updatedNodesWithGroups);
         setEdges(layoutedElements.edges);
     }, [nodes, edges]);
-    
+
     const handleOpenSidebar = () => {
         setIsSidebarOpen((prev) => !prev);
-      };
+    };
+
+
 
     return (
         <div style={{ display: "flex", height: "100vh" }}>
@@ -768,37 +821,39 @@ function App() {
                             <div>
                                 <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> YEAR: {popupInfo.courseInfo.year}</p>
                                 <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> ECTS: {popupInfo.courseInfo.ects}</p>
-                     
+
                                 {popupInfo.courseInfo.learning_outcomes.length > 0 ? (
-                                        <ul style={{ paddingLeft: "20px", margin: 0 }}>
-                                            {popupInfo.courseInfo.learning_outcomes.map((outcome, index) => (
-                                                <li key={index}>{outcome}</li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <p>None available</p>
-                                    )}
+                                    <ul style={{ paddingLeft: "20px", margin: 0 }}>
+                                        {popupInfo.courseInfo.learning_outcomes.map((outcome, index) => (
+                                            <li key={index}>{outcome}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p>None available</p>
+                                )}
 
                             </div>
-                                )}
-                                    {((popupInfo.courseInfo.isGroup)) && (
-                                        <div>
-                                            <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> TOTAL ECTS: {popupInfo.courseInfo.ects}</p>
-                                        </div>
-                                    )}
+                        )}
+                        {((popupInfo.courseInfo.isGroup)) && (
+                            <div>
+                                <p style={{ margin: 0, fontSize: "14px", color: "#555" }}> TOTAL ECTS: {popupInfo.courseInfo.ects}</p>
+                            </div>
+                        )}
 
                     </div>
                 )}
             </div>
             {/* Sidebar */}
             <div className="bg-grey-300 h-screen flex flex-col border-l border-gray-300 w-[250px]">
-                <div className="block w-full p-4 mb-4 text-center uppercase" style={{ borderBottom: "1px solid black " }}>
+                <div className="block w-full p-4 text-center uppercase" style={{ borderBottom: "1px solid black " }}>
                     <h2 className="block w-full font-bold p-1 text-center uppercase" style={{ borderBottom: "1px solid gray " }}>
                         Available Courses
                     </h2>
                     <h4 className="block w-full pt-2">Total Credits in the tree:</h4>
                     <h5 className="font-bold">{totalCredits}</h5>
                 </div>
+                {/* Filter button */}
+                <button onClick={() => setShowFilters(true)} className="p-2 m-0 bg-purple-500 text-white flex justify-center items-center gap-2 mb-2 hover:bg-purple-700"><MixerHorizontalIcon /> Filter</button>
 
 
                 {/* Scrollable List */}
@@ -844,69 +899,119 @@ function App() {
                 <div>
                     <div>
                         <button onClick={handleOpenSidebar} className="uppercase w-full p-4 text-white border-t cursor-pointer text-center bg-purple-600 hover:bg-purple-700">
-                        {isSidebarOpen ? "Close Work Summary" : "View Work Summary"}
+                            {isSidebarOpen ? "Close Work Summary" : "View Work Summary"}
                         </button>
                     </div>
                     {isSidebarOpen && (
                         <div
-                        style={{
-                            width: "300px",
-                            backgroundColor: "#f9f9f9",
-                            boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
-                            padding: "20px",
-                            position: "fixed",
-                            top: 0,
-                            right: 0,
-                            height: "100%",
-                            overflowY: "auto",
-                        }}
-                        >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <h2 style={{ fontWeight: "bold", fontSize: "24px", marginBottom: "20px" }}  >Work Summary</h2>
-                            <button
-                            onClick={() => setIsSidebarOpen(false)}
                             style={{
-                                backgroundColor: "red",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "5px",
-                                padding: "5px 10px",
-                                cursor: "pointer",
+                                width: "300px",
+                                backgroundColor: "#f9f9f9",
+                                boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
+                                padding: "20px",
+                                position: "fixed",
+                                top: 0,
+                                right: 0,
+                                height: "100%",
+                                overflowY: "auto",
                             }}
-                            >
-                            Close
-                            </button>
-                        </div>
-                        <h3 style={{ fontWeight: "bold", fontSize: "18px", marginTop: "10px" }}>Assignments Types</h3>
-                        {Object.keys(workSummary).length === 0 ? (
-                        <p>No work assigned yet.</p>
-                        ) : (
-                        <ul>
-                            {Object.entries(workSummary).map(([category, count], index) => (
-                            <li key={index}>
-                                {category}: {count}
-                            </li>
-                            ))}
-                        </ul>
-                        )}
+                        >
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <h2 style={{ fontWeight: "bold", fontSize: "24px", marginBottom: "20px" }}  >Work Summary</h2>
+                                <button
+                                    onClick={() => setIsSidebarOpen(false)}
+                                    style={{
+                                        backgroundColor: "red",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "5px",
+                                        padding: "5px 10px",
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    Close
+                                </button>
+                            </div>
+                            <h3 style={{ fontWeight: "bold", fontSize: "18px", marginTop: "10px" }}>Assignments Types</h3>
+                            {Object.keys(workSummary).length === 0 ? (
+                                <p>No work assigned yet.</p>
+                            ) : (
+                                <ul>
+                                    {Object.entries(workSummary).map(([category, count], index) => (
+                                        <li key={index}>
+                                            {category}: {count}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
 
-                        <h3 style={{ fontWeight: "bold", fontSize: "18px", marginTop: "20px" }}>Topics Studied</h3>
-                        {topics.size === 0 ? (
-                        <p>No topics assigned yet.</p>
-                        ) : (
-                        <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
-                            {[...topics].map((topic, index) => (
-                            <li key={index} style={{ marginBottom: "5px" }}>
-                                {topic}
-                            </li>
-                            ))}
-                        </ul>
-                        )}
+                            <h3 style={{ fontWeight: "bold", fontSize: "18px", marginTop: "20px" }}>Topics Studied</h3>
+                            {topics.size === 0 ? (
+                                <p>No topics assigned yet.</p>
+                            ) : (
+                                <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
+                                    {[...topics].map((topic, index) => (
+                                        <li key={index} style={{ marginBottom: "5px" }}>
+                                            {topic}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
-                        )}
+                    )}
+                </div>
+            </div>
+            <div className={`${showFilters ? "" : "hidden"} absolute top-[63px] right-0 z-100 bg-white h-[calc(100vh-63px)] flex flex-col border-l border-gray-300 w-[270px]`}>
+                <button className="absolute top-5 right-5 text-gray-600 hover:text-gray-400" onClick={() => setShowFilters(false)}>
+                    <Cross1Icon height={24} width={24} />
+                </button>
+                <div className="flex flex-col items-center gap-3 mt-12 mx-8">
+                    <div className="flex flex-col w-full">
+                        <label className="text-sm font-medium text-neutral-700 mb-1">Main Area</label>
+                        <select
+                            value={areaFilter}
+                            onChange={(e) => { setAreaFilter(e.target.value) }}
+                            className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
+                        >
+                            <option value="all">All Areas</option>
+                            {areas.map(area => (
+                                <option value={area}>{area}</option>
+                            ))}
+                        </select>
                     </div>
-            </div>  
-
+                    <div className="flex flex-col w-full">
+                        <label className="text-sm font-medium text-neutral-700 mb-1">Outcome</label>
+                        <select
+                            value={outcomeFilter}
+                            onChange={(e) => { setOutcomeFilter(e.target.value) }}
+                            className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
+                        >
+                            <option value="all">All Outcomes</option>
+                            {outcomes.map(outcome => (
+                                <option value={outcome.id}>{outcome.description}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex flex-col w-full">
+                        <label className="text-sm font-medium text-neutral-700 mb-1">Semester</label>
+                        <select
+                            value={semesterFilter}
+                            onChange={(e) => { setSemesterFilter(e.target.value) }}
+                            className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
+                        >
+                            <option value="all">All Semesters</option>
+                            {semesters.map(semester => (
+                                <option value={semester}>{semester}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2">
+                        <span className={`${selectHighlighted ? "" : "font-bold"}`}>Filter</span>
+                        <Toggle onChange={() => setSelectHighlighted(!selectHighlighted)} icons={false} className="toggle-styling" />
+                        <span className={`${selectHighlighted ? "font-bold" : ""}`}>Highlight</span>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
