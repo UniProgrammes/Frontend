@@ -34,6 +34,7 @@ interface Course {
     learning_outcomes: string[];
     prerequisites: string[];
     year: number;
+    semester: number;
 }
 
 interface CourseResponse {
@@ -43,16 +44,33 @@ interface CourseResponse {
     results: Course[];
 }
 
+interface OutcomeResponse {
+    id: string;
+    description: string;
+    category: string;
+}
+
+interface Outcome {
+    id: string;
+    description: string;
+}
+
 function ViewProgramme() {
     const [searchTerm, setSearchTerm] = useState("");
     const [programmes, setProgrammes] = useState<Programme[]>([]);
+    const [outcomes, setOutcomes] = useState<Outcome[]>([]);
     const [courses, setCourses] = useState<Course[]>([]);
+    const [areas, setAreas] = useState<string[]>([]);
+    const [semesters, setSemesters] = useState<number[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
     const [displayFilter, setDisplayFilter] = useState<"all" | "programmes" | "courses">("all");
     const [yearFilter, setYearFilter] = useState<number | "all">("all");
+    const [areaFilter, setAreaFilter] = useState<string | "all">("all");
+    const [outcomeFilter, setOutcomeFilter] = useState<string | "all">("all");
     const [selectedProgramme, setSelectedProgramme] = useState<Programme | null>(null);
+    const [semesterFilter, setSemesterFilter] = useState<number | string>("all");
 
     const handleSearch = async () => {
         if (!searchTerm.trim()) return;
@@ -73,6 +91,30 @@ function ViewProgramme() {
                 year: Math.floor(Math.random() * 5) + 1
             }));
             setCourses(coursesWithYear);
+
+            setAreas(Array.from(new Set(coursesWithYear.map(course => (
+                course.main_area
+            )))));
+
+            const allLearningOutcomes = Array.from(new Set(courseResponse.data.results.map(course => (
+                course.learning_outcomes
+            )).flat()));
+            // Fetch all the learning outcomes descriptions
+            const outcomeRequests = allLearningOutcomes.map(async outcome => (
+                client.get<OutcomeResponse>(`/v1/learning-outcomes/${outcome}`)
+            ))
+            const outcomeResponses = (await Promise.all(outcomeRequests)).map(res => ({
+                id: res.data.id,
+                description: res.data.description
+            }));
+            setOutcomes(outcomeResponses);
+
+            //Handle setting semesters
+            const allSemesters = Array.from(new Set(courseResponse.data.results.map(course => (
+                course.semester
+            ))));
+            setSemesters(allSemesters);
+
         } catch (_) {
             setError("Failed to fetch results. Please try again.");
             setProgrammes([]);
@@ -88,7 +130,7 @@ function ViewProgramme() {
 
     const renderFilters = () => {
         return (
-            <div className="flex justify-end items-center gap-4 mb-4 p-6">
+            <div className="flex justify-end items-center gap-4 mb-2 px-6 py-2">
                 <div className="flex flex-col">
                     <label className="text-sm font-medium text-neutral-700 mb-1">Display</label>
                     <select
@@ -120,6 +162,48 @@ function ViewProgramme() {
                         </select>
                     </div>
                 }
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium text-neutral-700 mb-1">Main Area</label>
+                    <select
+                        value={areaFilter}
+                        onChange={(e) => { setAreaFilter(e.target.value) }}
+                        className="disabled:bg-slate-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
+                        disabled={displayFilter === "programmes"}
+                    >
+                        <option value="all">All Areas</option>
+                        {areas.map(area => (
+                            <option value={area}>{area}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium text-neutral-700 mb-1">Main Area</label>
+                    <select
+                        value={outcomeFilter}
+                        onChange={(e) => { setOutcomeFilter(e.target.value) }}
+                        className="w-48 text-ellipsis disabled:bg-slate-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
+                        disabled={displayFilter === "programmes"}
+                    >
+                        <option value="all">All Outcomes</option>
+                        {outcomes.map(outcome => (
+                            <option value={outcome.id}>{outcome.description}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="flex flex-col">
+                    <label className="text-sm font-medium text-neutral-700 mb-1">Main Area</label>
+                    <select
+                        value={semesterFilter}
+                        onChange={(e) => { setSemesterFilter(e.target.value) }}
+                        className="disabled:bg-slate-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-2 focus:ring-purple-500"
+                        disabled={displayFilter === "programmes"}
+                    >
+                        <option value="all">All Semesters</option>
+                        {semesters.map(semester => (
+                            <option value={semester}>{semester}</option>
+                        ))}
+                    </select>
+                </div>
             </div>
         );
     };
@@ -137,12 +221,34 @@ function ViewProgramme() {
             return <span className="text-lg text-neutral-500">Start typing to search for programmes and courses...</span>;
         }
 
+        const applyCourseFilters = (): Course[] => {
+            if (displayFilter === "programmes") {
+                return [];
+            }
+
+            let coursesArr = courses;
+
+            if (yearFilter !== "all") {
+                coursesArr = coursesArr.filter(course => course.year === yearFilter);
+            }
+
+            if (areaFilter !== "all") {
+                coursesArr = coursesArr.filter(course => course.main_area === areaFilter);
+            }
+
+            if (outcomeFilter !== "all") {
+                coursesArr = coursesArr.filter(course => course.learning_outcomes.includes(outcomeFilter));
+            }
+
+            if (semesterFilter !== "all") {
+                coursesArr = coursesArr.filter(course => course.semester === Number(semesterFilter));
+            }
+
+            return coursesArr;
+        }
+
         const filteredProgrammes = displayFilter === "courses" ? [] : programmes;
-        const filteredCourses = displayFilter === "programmes"
-            ? []
-            : yearFilter === "all"
-                ? courses
-                : courses.filter(course => course.year === yearFilter);
+        const filteredCourses = applyCourseFilters();
 
         if (filteredProgrammes.length === 0 && filteredCourses.length === 0) {
             return <div className="text-lg text-neutral-500">No results found matching your search and filters.</div>;
@@ -157,9 +263,9 @@ function ViewProgramme() {
                         </div>
                         <h2 className="text-xl font-semibold text-purple-700 pr-24">{programme.name}</h2>
                         <div className="mt-2 text-neutral-600">
-                            <p>Degree Type: {programme.degree_type}</p>
-                            <p>Credits: {programme.credits}</p>
-                            <p>Courses: {programme.courses.length}</p>
+                            <p>Degree Type: <span className="font-bold">{programme.degree_type}</span></p>
+                            <p>Credits: <span className="font-bold">{programme.credits}</span></p>
+                            <p>Courses: <span className="font-bold">{programme.courses.length}</span></p>
                         </div>
                         <button
                             onClick={() => handleProgrammeSelect(programme)}
@@ -181,11 +287,12 @@ function ViewProgramme() {
                             </div>
                         </div>
 
-                        <h2 className="text-xl font-semibold text-purple-700 pr-24">{course.name}</h2>
-                        <div className="mt-2 text-neutral-600">
+                        <h2 className="text-xl font-semibold text-blue-700 pr-24">{course.name}</h2>
+                        <div className="mt-2 text-neutral-600 grid grid-cols-2 max-w-[70%]">
                             <p>Code: {course.code}</p>
                             <p>Credits: {course.credits}</p>
                             <p>Level: {course.educational_level}</p>
+                            <p>Main Area: {course.main_area}</p>
                             <p className="text-sm mt-2 text-neutral-500">{course.description}</p>
                         </div>
                     </div>
