@@ -129,7 +129,7 @@ function CreatePlan() {
                 const bodyRequest = selectedCourses.map((c) => {
                     return {
                         id: c.id,
-                        semester: 2
+                        semester: c.semester
                     }
                 });
                 addCoursesToStudyPlan(studyPlan.id, { courses: bodyRequest });
