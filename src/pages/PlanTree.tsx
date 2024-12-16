@@ -707,6 +707,30 @@ function App() {
         setIsSidebarOpen((prev) => !prev);
       };
 
+    const handleDownload = () => {
+        const dataToDownload = nodes.map((node) => ({
+          id: node.id,
+          label: node.data?.label || "",
+          credits: node.data?.ects || "",
+          learning_outcomes: node.data?.learning_outcomes || [],
+          year: node.data?.year || "",
+        }));
+    
+        const blob = new Blob([JSON.stringify(dataToDownload, null, 2)], {
+          type: "application/json",
+        });
+    
+        const url = URL.createObjectURL(blob);
+    
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "study_plan.json";
+        a.click();
+    
+        URL.revokeObjectURL(url);
+      };
+    
+
     return (
         <div style={{ display: "flex", height: "100vh" }}>
             {/* React Flow Canvas */}
@@ -793,6 +817,12 @@ function App() {
             {/* Sidebar */}
             <div className="bg-grey-300 h-screen flex flex-col border-l border-gray-300 w-[250px]">
                 <div className="block w-full p-4 mb-4 text-center uppercase" style={{ borderBottom: "1px solid black " }}>
+                    <button
+                        onClick={handleDownload}
+                        className="w-auto px-6 py-2 text-white text-sm font-bold rounded-full cursor-pointer bg-purple-600 hover:bg-purple-700"
+                    >
+                        Download Plan
+                    </button>
                     <h2 className="block w-full font-bold p-1 text-center uppercase" style={{ borderBottom: "1px solid gray " }}>
                         Available Courses
                     </h2>
@@ -905,8 +935,7 @@ function App() {
                         </div>
                         )}
                     </div>
-            </div>  
-
+            </div> 
         </div>
     );
 }
