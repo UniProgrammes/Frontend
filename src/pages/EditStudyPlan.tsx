@@ -90,6 +90,11 @@ function EditStudyPlan() {
 
     const handleCourseSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const courseId = event.target.value;
+
+        if(courseId === "All courses") {
+            setNewCourses(filteredCourses);
+        }
+
         const selectedCourse = courses.find(course => course.id === courseId);
         if (selectedCourse && !newCourses.some(course => course.id === courseId)) {
             setNewCourses([...newCourses, selectedCourse]);
@@ -184,6 +189,7 @@ function EditStudyPlan() {
                             : "Select a course"
                         }
                     </option>
+                    <option value="All courses">All courses</option>
                     {filteredCourses.map((course) => (
                         <option key={course.id} value={course.id}>
                             {course.name}
@@ -255,12 +261,6 @@ function EditStudyPlan() {
                                     >
                                         Update Plan
                                     </button>
-                                    <button 
-                                        className="block text-xl w-auto m-2 h-10 p-2 px-8 rounded-lg text-white text-center text-bold bg-purple-600"
-                                        onClick={handleRemoveAllCourses}
-                                    >
-                                        Remove all courses
-                                    </button>
                                 </div>
                             </div>
 
@@ -270,7 +270,14 @@ function EditStudyPlan() {
                             <hr className="border-black my-4" />
                             
                             <div id="current-plan" className="flex flex-row items-center justify-between px-4 py-2">
-                                <h1 className="text-2xl text-black">Selected Courses</h1> 
+                                <h1 className="text-2xl text-black">Selected Courses</h1>
+                                <button 
+                                    className={`block text-xl w-auto m-2 h-10 p-2 px-8 rounded-lg text-white text-center text-bold ${selectedCourses.length !== 0 ? "bg-purple-600" : "bg-gray-400"}`}
+                                    onClick={handleRemoveAllCourses}
+                                    disabled={selectedCourses.length === 0}
+                                >
+                                    Remove all courses
+                                </button>
                                 <button 
                                     onClick={handleProgramTreeClick} 
                                     className="block text-xl w-1/3 m-4 h-10 p-2 rounded-lg text-white text-center text-bold bg-purple-600"
