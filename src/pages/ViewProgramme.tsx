@@ -177,7 +177,7 @@ function ViewProgramme() {
                     </select>
                 </div>
                 <div className="flex flex-col">
-                    <label className="text-sm font-medium text-neutral-700 mb-1">Main Area</label>
+                    <label className="text-sm font-medium text-neutral-700 mb-1">Outcome</label>
                     <select
                         value={outcomeFilter}
                         onChange={(e) => { setOutcomeFilter(e.target.value) }}
@@ -191,7 +191,7 @@ function ViewProgramme() {
                     </select>
                 </div>
                 <div className="flex flex-col">
-                    <label className="text-sm font-medium text-neutral-700 mb-1">Main Area</label>
+                    <label className="text-sm font-medium text-neutral-700 mb-1">Semester</label>
                     <select
                         value={semesterFilter}
                         onChange={(e) => { setSemesterFilter(e.target.value) }}
