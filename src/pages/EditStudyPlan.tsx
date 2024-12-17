@@ -124,7 +124,7 @@ function EditStudyPlan() {
                 const addCourses = newCourses.map((course) => {
                     return {
                         id: course.id,
-                        semester: 2
+                        semester: course.semester
                     }
                 });
 
