@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import { notification } from "antd"
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation  } from "react-router-dom";
 
 import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course, getAllStudyPlans } from "~/api";
 import CourseCard from "~/components/CourseCard";
@@ -29,6 +29,9 @@ function CreatePlan() {
     const [planName, setPlanName] = useState("");
     const navigate = useNavigate();
     const [PlanNameErrorMessage, setPlanNameErrorMessage] = useState<string>("");
+    const location = useLocation();
+    const { courseSelection } = location.state || {};
+    const { programme } = location.state || {};
 
     useEffect(() => {
         const fetchData = async () => {
@@ -79,9 +82,28 @@ function CreatePlan() {
         }
     }, [selectedProgramme, courses, programmes]);
 
+    useEffect(() => {
+            if (courseSelection) {
+                const preselectedCourses = courses.filter((course) =>
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    courseSelection.includes(course.id)
+                );
+                setSelectedCourses(preselectedCourses);
+            }
+            if (programme) {
+                setSelectedProgramme(programme);
+            }
+        }
+    , [courseSelection, programme, courses]);
+
     const handleProgramTreeClick = () => {
         if (selectedProgramme) {
-            window.location.href = `/plantree?programmeId=${selectedProgramme}`;
+            navigate(`/plantree?programmeId=${selectedProgramme}`, {
+                state: {
+                    courseSelection: selectedCourses.map(course => course.id),
+                },
+            });
+            //window.location.href = `/plantree?programmeId=${selectedProgramme}`;
         }
         else {
             alert("Please select a programme first.");
@@ -314,7 +336,7 @@ function CreatePlan() {
                                 <button 
                                     onClick={handleProgramTreeClick} 
                                     className="block text-xl w-1/3 m-4 h-10 p-2 rounded-lg text-white text-center text-bold bg-purple-600 "
-                                    disabled={selectedCourses.length === 0}
+                                    //disabled={selectedCourses.length === 0}
                                 >
                                     See Programme Tree
                                 </button>

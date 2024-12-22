@@ -4,7 +4,7 @@ import { TrashIcon, CardStackPlusIcon } from "@radix-ui/react-icons";
 import { ReactFlow, ReactFlowProvider, MiniMap, Background, Controls, ControlButton, NodeMouseHandler, Node, Edge } from "@xyflow/react";
 import ELK from "elkjs/lib/elk.bundled.js";
 import "@xyflow/react/dist/style.css";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
 
 import { getAllProgrammes, getAllCourses, getLearningOutcome } from "~/api";
 import { LabeledGroupNode } from "~/components/labeled-group-node";
@@ -186,6 +186,9 @@ function App() {
     const [workSummary, setWorkSummary] = useState<{ [category: string]: number }>({});
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [topics, setTopics] = useState<Set<string>>(new Set());
+    const location = useLocation();
+    const { courseSelection } = location.state || {};
+    const navigate = useNavigate();
 
     const programmeId = searchParams.get("programmeId");
 
@@ -271,12 +274,49 @@ function App() {
         undeletableNodes = new Set(newNodes.map((node) => node.id));
 
         const newEdges: Edge[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        courseSelection.forEach((courseId:string) => {
+            const course = courseList.find((c) => c.id === courseId);
+    
+            if (!course) return;
+    
+            // Create a node for the course
+            const courseNode: CustomNode = {
+                id: course.id,
+                data: {
+                    label: course.name,
+                    description: course.description,
+                    ects: parseFloat(course.credits),
+                    year: course.year,
+                    isGroup: false,
+                    learning_outcomes: course.learning_outcomes,
+                },
+                position: { x: 0, y: 0 }, // Position will be updated by layout
+            };
+    
+            newNodes.push(courseNode);
+    
+            // Add prerequisite edges
+            course.prerequisites.forEach((preId) => {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                if (newNodes.find((node) => node.id === preId) || courseSelection.includes(preId)) {
+                    newEdges.push({
+                        id: `e${preId}-${course.id}`,
+                        source: preId,
+                        target: course.id,
+                        animated: false,
+                        type: "smoothstep",
+                        style: { stroke: "black", strokeDasharray: 0, strokeWidth: 2 },
+                    });
+                }
+            });
+        });
 
         getLayoutedElements(newNodes, newEdges).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
             setNodes(layoutedNodes);
             setEdges(layoutedEdges);
         });
-    }, [structure]);
+    }, [structure, courseSelection, courseList]);
 
     useEffect(() => {
         if (!structure) return;
@@ -729,12 +769,27 @@ function App() {
     
         URL.revokeObjectURL(url);
       };
+
+      const handleNavigateToCreatePlan = () => {
+        const currentCourses = nodes.map((node) => node.id); 
+        navigate("/createplan", {
+            state: {
+                courseSelection:currentCourses,
+                programme : programmeId,
+            }})
+    };
     
 
     return (
         <div style={{ display: "flex", height: "100vh" }}>
             {/* React Flow Canvas */}
             <div style={{ flexGrow: 1 }}>
+            <button 
+                className="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-md mt-4 ml-4"
+                onClick={handleNavigateToCreatePlan}
+            >
+                Back to Create Plan
+            </button>
                 <ReactFlowProvider>
                     <div
                         style={{ width: "100%", height: "100%" }}
