@@ -1043,44 +1043,179 @@ function App() {
                             </select>
                         </div>
                     </div>
-                    <div className="flex flex-col w-full">
-                        <label className="text-sm font-medium text-neutral-700 mb-1">Outcome</label>
-                        <select
-                            value={outcomeFilter}
-                            onChange={(e) => { setOutcomeFilter(e.target.value) }}
-                            className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
-                        >
-                            <option value="all">All Outcomes</option>
-                            {outcomes.map(outcome => (
-                                <option value={outcome.id}>{outcome.description}</option>
-                            ))}
-                        </select>
+                    <div className="block w-full p-4 text-center uppercase" style={{ borderBottom: "1px solid black " }}>
+                        <h2 className="block w-full font-bold p-1 text-center uppercase" style={{ borderBottom: "1px solid gray " }}>
+                            Available Courses
+                        </h2>
+                        <h4 className="block w-full pt-2">Total Credits in the tree:</h4>
+                        <h5 className="font-bold">{totalCredits}</h5>
                     </div>
-                    <div className="flex flex-col w-full">
-                        <label className="text-sm font-medium text-neutral-700 mb-1">Semester</label>
-                        <select
-                            value={semesterFilter}
-                            onChange={(e) => { setSemesterFilter(e.target.value) }}
-                            className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
-                        >
-                            <option value="all">All Semesters</option>
-                            {semesters.map(semester => (
-                                <option value={semester}>{semester}</option>
+                    {/* Filter button */}
+                    <button onClick={() => setShowFilters(true)} className="p-2 m-0 bg-purple-500 text-white flex justify-center items-center gap-2 mb-2 hover:bg-purple-700"><MixerHorizontalIcon /> Filter</button>
+
+
+                    {/* Scrollable List */}
+                    <ul className="list-none p-0 flex-1 overflow-y-auto m-0">
+                        {courseList
+                            .sort((a, b) => a.year - b.year)
+                            .map((course) => (
+                                <li key={course.id} className="mb-2">
+                                    <div
+                                        style={{
+                                            padding: "6px 12px",
+                                            margin: "0 10px",
+                                            backgroundColor: isCourseInTree(course.id)
+                                                ? "#ddd"
+                                                : colorMapping.get(course.year),
+                                            color: isCourseInTree(course.id) ? "#666" : "white",
+                                            cursor: isCourseInTree(course.id) ? "not-allowed" : "grab",
+                                            border: "none",
+                                            borderRadius: "4px",
+                                            userSelect: "none"
+                                        }}
+                                        draggable={!isCourseInTree(course.id)}
+                                        onDragStart={(e) => {
+                                            e.dataTransfer.setData("application/courseId", course.id);
+                                            e.dataTransfer.effectAllowed = "move";
+                                        }}
+                                        className="p-3 rounded cursor-pointer"
+                                    >
+                                        <p>
+                                            {course.name} ({course.year}) </p>
+                                    </div>
+                                </li>
                             ))}
-                        </select>
+                    </ul>
+
+                    {/* Fixed Button at the Bottom */}
+                    <button
+                        onClick={importAllCourses}
+                        className="uppercase w-full p-4 text-white border-t cursor-pointer text-center bg-purple-600 hover:bg-purple-700"
+                    >
+                        Import All Courses
+                    </button>
+                    <div>
+                        <div>
+                            <button onClick={handleOpenSidebar} className="uppercase w-full p-4 text-white border-t cursor-pointer text-center bg-purple-600 hover:bg-purple-700">
+                                {isSidebarOpen ? "Close Work Summary" : "View Work Summary"}
+                            </button>
+                        </div>
+                        {isSidebarOpen && (
+                            <div
+                                style={{
+                                    width: "300px",
+                                    backgroundColor: "#f9f9f9",
+                                    boxShadow: "0 0 10px rgba(0, 0, 0, 0.2)",
+                                    padding: "20px",
+                                    position: "fixed",
+                                    top: 0,
+                                    right: 0,
+                                    height: "100%",
+                                    overflowY: "auto",
+                                }}
+                            >
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <h2 style={{ fontWeight: "bold", fontSize: "24px", marginBottom: "20px" }}  >Work Summary</h2>
+                                    <button
+                                        onClick={() => setIsSidebarOpen(false)}
+                                        style={{
+                                            backgroundColor: "red",
+                                            color: "white",
+                                            border: "none",
+                                            borderRadius: "5px",
+                                            padding: "5px 10px",
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                                <h3 style={{ fontWeight: "bold", fontSize: "18px", marginTop: "10px" }}>Assignments Types</h3>
+                                {Object.keys(workSummary).length === 0 ? (
+                                    <p>No work assigned yet.</p>
+                                ) : (
+                                    <ul>
+                                        {Object.entries(workSummary).map(([category, count], index) => (
+                                            <li key={index}>
+                                                {category}: {count}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+
+                                <h3 style={{ fontWeight: "bold", fontSize: "18px", marginTop: "20px" }}>Topics Studied</h3>
+                                {topics.size === 0 ? (
+                                    <p>No topics assigned yet.</p>
+                                ) : (
+                                    <ul style={{ listStyleType: "disc", paddingLeft: "20px" }}>
+                                        {[...topics].map((topic, index) => (
+                                            <li key={index} style={{ marginBottom: "5px" }}>
+                                                {topic}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        )}
                     </div>
-                    <div className="flex flex-col w-full">
-                        <label className="text-sm font-medium text-neutral-700 mb-1">Year</label>
-                        <select
-                            value={yearFilter}
-                            onChange={(e) => { setYearFilter(e.target.value) }}
-                            className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
-                        >
-                            <option value="all">All Years</option>
-                            {years.map(year => (
-                                <option value={year}>{year}. Year</option>
-                            ))}
-                        </select>
+                </div>
+                <div className={`${showFilters ? "" : "hidden"} absolute top-[63px] right-0 z-100 bg-white h-[calc(100vh-63px)] flex flex-col border-l border-gray-300 w-[270px]`}>
+                    <button className="absolute top-5 right-5 text-gray-600 hover:text-gray-400" onClick={() => setShowFilters(false)}>
+                        <Cross1Icon height={24} width={24} />
+                    </button>
+                    <div className="flex flex-col items-center gap-3 mt-12 mx-8">
+                        <div className="flex flex-col w-full">
+                            <label className="text-sm font-medium text-neutral-700 mb-1">Main Area</label>
+                            <select
+                                value={areaFilter}
+                                onChange={(e) => { setAreaFilter(e.target.value) }}
+                                className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
+                            >
+                                <option value="all">All Areas</option>
+                                {areas.map(area => (
+                                    <option value={area}>{area}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex flex-col w-full">
+                            <label className="text-sm font-medium text-neutral-700 mb-1">Outcome</label>
+                            <select
+                                value={outcomeFilter}
+                                onChange={(e) => { setOutcomeFilter(e.target.value) }}
+                                className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
+                            >
+                                <option value="all">All Outcomes</option>
+                                {outcomes.map(outcome => (
+                                    <option value={outcome.id}>{outcome.description}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex flex-col w-full">
+                            <label className="text-sm font-medium text-neutral-700 mb-1">Semester</label>
+                            <select
+                                value={semesterFilter}
+                                onChange={(e) => { setSemesterFilter(e.target.value) }}
+                                className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
+                            >
+                                <option value="all">All Semesters</option>
+                                {semesters.map(semester => (
+                                    <option value={semester}>{semester}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex flex-col w-full">
+                            <label className="text-sm font-medium text-neutral-700 mb-1">Year</label>
+                            <select
+                                value={yearFilter}
+                                onChange={(e) => { setYearFilter(e.target.value) }}
+                                className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
+                            >
+                                <option value="all">All Years</option>
+                                {years.map(year => (
+                                    <option value={year}>{year}. Year</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
