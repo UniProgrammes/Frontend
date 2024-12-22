@@ -70,7 +70,7 @@ function Profile() {
   };
 
   return (
-    <main className="bg-neutral-200 rounded-3xl p-8 m-8 flex flex-col items-center">
+    <div className="bg-gray-200 rounded-3xl p-8 m-8 flex flex-col items-center">
       <h2 className="text-2xl font-bold mb-4">Change your profile settings</h2>
       <div className="relative mb-6">
         <img
@@ -189,7 +189,7 @@ function Profile() {
         </div>
       </div>
       {error && <p className="text-red-500">{error}</p>}
-    </main>
+    </div>
   );
 }
 

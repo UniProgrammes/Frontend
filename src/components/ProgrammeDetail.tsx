@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { CrossCircledIcon } from "@radix-ui/react-icons";
+import { GrClose } from "react-icons/gr";
 
 import { client } from "../api/index";
 
@@ -78,8 +78,8 @@ export function ProgrammeDetail({ programme, setSelectedProgramme }: ProgrammeDe
             <div className="space-y-6">
                 {/* Programme Header */}
                 <div className="border-b p-6 border-neutral-200 pb-4 sticky top-0 left-0 bg-white shadow-sm">
-                    <button onClick={removeSelection} className="bg-white text-slate-700 w-auto h-auto rounded-2xl text-2xl p-2 shadow-md absolute right-4 top-4">
-                        <CrossCircledIcon />
+                    <button onClick={removeSelection} className="bg-red-600 hover:bg-red-800 text-white w-auto h-auto rounded-2xl text-md p-2 shadow-md absolute right-4 top-4">
+                        <GrClose />
                     </button>
                     <h1 className="text-2xl font-bold text-purple-700">{programme.name}</h1>
                     <div className="mt-2 flex items-center gap-2">

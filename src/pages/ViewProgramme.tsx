@@ -304,13 +304,13 @@ function ViewProgramme() {
     return (
         <div className="flex flex-row max-h-[calc(100%-63px)] max-w-full">
             <div id="main-content" className="w-full flex flex-col max-h-full overflow-y-auto">
-                <main className="bg-neutral-300 rounded-3xl p-4 m-8">
+                <main className="bg-gray-200 rounded-3xl p-4 m-8">
                     <h1 className="ml-8 text-2xl font-bold mb-4 text-neutral-700">Search Programmes & Courses</h1>
-                    <div id="search-bar" className="flex space-y-4 flex-col items-start bg-[#C3AAEA] rounded-xl p-4">
+                    <div id="search-bar" className="flex space-x-4 items-center rounded-xl p-4">
                         <input
                             type="text"
                             placeholder="Search"
-                            className="w-full rounded-md p-2"
+                            className="flex-grow rounded-md p-2 border border-black"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             onKeyPress={async (e) => e.key === "Enter" && handleSearch()}
@@ -322,6 +322,7 @@ function ViewProgramme() {
                             Search
                         </button>
                     </div>
+
                     <hr className="my-4 border-neutral-400" />
                     {hasSearched && renderFilters()}
                     <div id="content" className="flex flex-col items-center justify-center min-h-[20rem] p-4">
