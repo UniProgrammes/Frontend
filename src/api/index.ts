@@ -59,6 +59,10 @@ export interface Course {
   semester: number;
 }
 
+export interface StudyPlanCourse extends Course {
+  is_completed: boolean;
+}
+
 export interface StudyPlan {
   id: string;
   created_at: string;
@@ -154,7 +158,7 @@ export const saveStudyPlan = async (studyPlanName: {name: string}) => {
 };
 
 export const getCoursesFromStudyPlan = async (studyPlanId: string) => {
-  const response = await client.get<Course[]>(`/v1/study-plans/${studyPlanId}/courses/`);
+  const response = await client.get<StudyPlanCourse[]>(`/v1/study-plans/${studyPlanId}/courses/`);
   return response;
 }
 
