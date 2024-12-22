@@ -5,8 +5,6 @@ import { ReactFlow, ReactFlowProvider, MiniMap, Background, Controls, ControlBut
 import ELK from "elkjs/lib/elk.bundled.js";
 import "@xyflow/react/dist/style.css";
 import { useSearchParams } from "react-router-dom";
-import Toggle from "react-toggle";
-import "react-toggle/style.css"
 
 import { getAllProgrammes, getAllCourses, getLearningOutcome, client } from "~/api";
 import { LabeledGroupNode } from "~/components/labeled-group-node";
@@ -205,10 +203,11 @@ function App() {
     const [areaFilter, setAreaFilter] = useState<string | "all">("all");
     const [outcomeFilter, setOutcomeFilter] = useState<string | "all">("all");
     const [semesterFilter, setSemesterFilter] = useState<number | string>("all");
+    const [yearFilter, setYearFilter] = useState<number | string>("all");
     const [outcomes, setOutcomes] = useState<Outcome[]>([]);
     const [areas, setAreas] = useState<string[]>([]);
     const [semesters, setSemesters] = useState<number[]>([]);
-    const [selectHighlighted, setSelectHighlighted] = useState<boolean>(false);
+    const [years, setYears] = useState<number[]>([]);
 
     const programmeId = searchParams.get("programmeId");
 
@@ -291,6 +290,11 @@ function App() {
             course.semester
         ))));
         setSemesters(allSemesters);
+
+        const allYears = Array.from(new Set(courseList.map(course => (
+            course.year
+        ))));
+        setYears(allYears);
     }, [courseList])
 
     useEffect(() => {
@@ -416,6 +420,33 @@ function App() {
         [nodes]
     );
 
+    // Function to check if a course matches the currently selected filters
+    const isCourseMatchFilters = (course: Course) => {
+        let matches = true;
+        let filtersApplied = true;
+        if (yearFilter !== "all" && course.year !== Number(yearFilter)) {
+            matches = false;
+        }
+
+        if (areaFilter !== "all" && course.main_area !== areaFilter) {
+            matches = false;
+        }
+
+        if (outcomeFilter !== "all" && !course.learning_outcomes.includes(outcomeFilter)) {
+            matches = false;
+        }
+
+        if (semesterFilter !== "all" && course.semester !== Number(semesterFilter)) {
+            matches = false;
+        }
+
+        if(semesterFilter === "all" && outcomeFilter === "all" && areaFilter === "all" && yearFilter === "all") {
+            filtersApplied = false;
+        }
+        return [matches, filtersApplied];
+    }
+
+    
     // Function to update node styles based on prerequisites
     const updateNodeStyles = useCallback(
         (nodesToUpdate: CustomNode[]) => {
@@ -426,25 +457,25 @@ function App() {
                         (preId) => !isCourseInTree(preId) || false
                     );
 
-                    const filteredByYear = false;
-                    let yearColor = "white";
-                    if (filteredByYear)
-                        yearColor = colorMapping.get(course.year) || "white";
+                    // Does it match current filters
+                    const [matchesFilters, filtersApplied] = isCourseMatchFilters(course);
+
 
                     return {
                         ...node,
                         style: {
                             backgroundColor: hasMissingPrerequisites
                                 ? "red"
-                                : yearColor, // Use the color for the year
+                                : "#ccc", // Use the color for the year
                             color: hasMissingPrerequisites ? "white" : "#000",
+                            filter: matchesFilters && filtersApplied ? "drop-shadow(3px 3px #aaa)" : !matchesFilters && filtersApplied ? "opacity(40%)" : "none"
                         },
                     };
                 }
                 return node;
             });
         },
-        [courseList, isCourseInTree]
+        [courseList, isCourseInTree, yearFilter, semesterFilter, outcomeFilter, areaFilter, isCourseMatchFilters]
     );
 
     // Function to handle drop event
@@ -551,6 +582,7 @@ function App() {
         [nodes, edges, updateNodeStyles]
     );
     // Update node styles when nodes or edges change
+    // Also update when filters change
     useEffect(() => {
         const updateStyles = async () => {
             // Re-layout the graph
@@ -562,7 +594,7 @@ function App() {
         };
         updateStyles();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [edges]);
+    }, [edges, yearFilter, semesterFilter, areaFilter, outcomeFilter]);
 
     const importAllCourses = useCallback(async () => {
         // Create a set of existing node ids
@@ -1005,10 +1037,18 @@ function App() {
                             ))}
                         </select>
                     </div>
-                    <div className="mt-2 flex items-center gap-2">
-                        <span className={`${selectHighlighted ? "" : "font-bold"}`}>Filter</span>
-                        <Toggle onChange={() => setSelectHighlighted(!selectHighlighted)} icons={false} className="toggle-styling" />
-                        <span className={`${selectHighlighted ? "font-bold" : ""}`}>Highlight</span>
+                    <div className="flex flex-col w-full">
+                        <label className="text-sm font-medium text-neutral-700 mb-1">Year</label>
+                        <select
+                            value={yearFilter}
+                            onChange={(e) => { setYearFilter(e.target.value) }}
+                            className="ring-2 ring-purple-200 rounded-md border-0 p-2 text-neutral-600 focus:ring-purple-500 w-full"
+                        >
+                            <option value="all">All Years</option>
+                            {years.map(year => (
+                                <option value={year}>{year}. Year</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             </div>
