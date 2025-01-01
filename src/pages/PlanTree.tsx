@@ -6,7 +6,7 @@ import ELK from "elkjs/lib/elk.bundled.js";
 import "@xyflow/react/dist/style.css";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
 
-import { getAllProgrammes, getAllCourses, getLearningOutcome } from "~/api";
+import { getAllProgrammes, getAllCourses, getLearningOutcome, getProgrammeCourses, getCoursesFromStudyPlan, deleteCoursesFromStudyPlan, getStudyPlan } from "~/api";
 import { LabeledGroupNode } from "~/components/labeled-group-node";
 
 const nodeTypes = {
@@ -188,6 +188,7 @@ function App() {
     const [topics, setTopics] = useState<Set<string>>(new Set());
     const location = useLocation();
     const { courseSelection } = location.state || {};
+    const { planId } = location.state || {};
     const navigate = useNavigate();
 
     const programmeId = searchParams.get("programmeId");
@@ -206,15 +207,17 @@ function App() {
                 );
                 return sortedCourses;
             })
+                
 
             const programmeSelected = programmes.find((p) => p.id === programmeId);
 
             if(!programmeSelected){
                 return;
             }
+            const programmeSelectedCourses= await getProgrammeCourses(programmeId);
 
             const programmeCourses = courses.filter((course) =>
-                programmeSelected.courses.includes(course.id))
+                programmeSelectedCourses.courses.some((selectedCourse) => selectedCourse.id === course.id))
                 .map((course) => {
                 if (course.prerequisites.length === 0) {
                     course.prerequisites.push("1");
@@ -536,8 +539,19 @@ function App() {
             //@ts-expect-error - setNodes expect the parsed type of the styledNodes
             setNodes(styledNodes);
             setEdges(layoutedElements.edges);
+
+            if(planId){
+                const currentPlan = await getStudyPlan(planId);
+                const response = await getCoursesFromStudyPlan(planId);
+                const studyPlanCourses: Course[] = response.data;
+                const isInStudyPlan = studyPlanCourses.some(course => course.id === nodeId);
+                if (isInStudyPlan) {
+                    const bodyRequest = { courses_ids: [nodeId] };
+                    await deleteCoursesFromStudyPlan(currentPlan, bodyRequest);
+                }
+            }
         },
-        [nodes, edges, updateNodeStyles]
+        [nodes, edges, updateNodeStyles, planId]
     );
     // Update node styles when nodes or edges change
     useEffect(() => {
@@ -772,11 +786,21 @@ function App() {
 
       const handleNavigateToCreatePlan = () => {
         const currentCourses = nodes.map((node) => node.id); 
-        navigate("/createplan", {
-            state: {
-                courseSelection:currentCourses,
-                programme : programmeId,
-            }})
+        if (planId){
+            navigate(`/edit-study-plan/${planId}`, {
+                state: {
+                    courseSelection:currentCourses,
+                    programme : programmeId,
+                    planId: planId,
+                }})            
+        }
+        else{
+            navigate("/createplan", {
+                state: {
+                    courseSelection:currentCourses,
+                    programme : programmeId,
+                }})  
+        }
     };
     
 
@@ -784,11 +808,11 @@ function App() {
         <div style={{ display: "flex", height: "100vh" }}>
             {/* React Flow Canvas */}
             <div style={{ flexGrow: 1 }}>
-            <button 
-                className="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-md mt-4 ml-4"
+            <button
                 onClick={handleNavigateToCreatePlan}
+                className="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out shadow-md mt-4 ml-4"
             >
-                Back to Create Plan
+                {planId ? "Back to Update Plan Page" : "Back to Create Plan Page"}
             </button>
                 <ReactFlowProvider>
                     <div

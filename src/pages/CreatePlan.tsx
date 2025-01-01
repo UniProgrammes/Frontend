@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { notification } from "antd"
 import { useNavigate, useLocation  } from "react-router-dom";
 
-import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course, getAllStudyPlans } from "~/api";
+import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course, getAllStudyPlans, getProgrammeCourses } from "~/api";
 import CourseCard from "~/components/CourseCard";
 import { checkName } from "~/lib/utils";
 
@@ -16,6 +16,7 @@ interface Programme {
   updated_at: string;
   courses: string[];
 }
+  
 
 function CreatePlan() {
     const [programmes, setProgrammes] = useState<Programme[]>([]);
@@ -69,18 +70,22 @@ function CreatePlan() {
     }, []);
 
     useEffect(() => {
-        if (selectedProgramme && courses.length > 0) {
-            const programme = programmes.find(p => p.id === selectedProgramme);
-            if (programme) {
-                const programCourses = courses.filter(course => 
-                    programme.courses.includes(course.id.toString())
-                );
-                setFilteredCourses(programCourses);
+        const fetchProgrammeCourses = async () => {
+            if (selectedProgramme) {
+                try {
+                    const programmeCourses = await getProgrammeCourses(selectedProgramme);
+                    setFilteredCourses(programmeCourses.courses);
+                } catch (error) {
+                    setError("Failed to fetch data. Please try again later.");
+                    // eslint-disable-next-line no-console
+                    console.error("Error fetching data:", error);
+                }
+            } else {
+                setFilteredCourses([]);
             }
-        } else {
-            setFilteredCourses([]);
-        }
-    }, [selectedProgramme, courses, programmes]);
+        };
+        fetchProgrammeCourses();
+    }, [selectedProgramme]);
 
     useEffect(() => {
             if (courseSelection) {
@@ -103,7 +108,6 @@ function CreatePlan() {
                     courseSelection: selectedCourses.map(course => course.id),
                 },
             });
-            //window.location.href = `/plantree?programmeId=${selectedProgramme}`;
         }
         else {
             alert("Please select a programme first.");
@@ -115,7 +119,7 @@ function CreatePlan() {
         if(courseId === "All courses") {
             setSelectedCourses(filteredCourses);
         }
-        const selectedCourse = courses.find(course => course.id === courseId);
+        const selectedCourse = filteredCourses.find(course => course.id === courseId);
         if (selectedCourse && !selectedCourses.some(course => course.id === courseId)) {
             setSelectedCourses([...selectedCourses, selectedCourse]);
         }

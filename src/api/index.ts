@@ -202,3 +202,20 @@ export const validatePrerequisites = async (studyPlan: StudyPlan) => {
   const response = await client.get<ValidRequisitesResponse>(`/v1/study-plans/${studyPlan.id}/validate-prerequisites`);
   return response.data;
 }
+
+export interface ProgrammeDetail {
+  id: string;
+  name: string;
+  credits: string;
+  degree_type: string;
+}
+
+export interface ProgrammeDetailsResponse {
+  programme: ProgrammeDetail;
+  courses: Course[];
+}
+
+export const getProgrammeCourses = async (programmeId: string) => {
+  const response = await client.get<ProgrammeDetailsResponse>(`/v1/programmes/${programmeId}/courses/`);
+  return response.data;
+};

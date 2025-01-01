@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useParams } from "wouter";
 
 import { RouteParams } from "./ViewStudyPlan";
 
-import { addCoursesToStudyPlan, Course, deleteCoursesFromStudyPlan, getAllCourses, getAllProgrammes, getCoursesFromStudyPlan, getStudyPlan, Programme, updateStudyPlan } from "~/api";
+import { addCoursesToStudyPlan, Course, deleteCoursesFromStudyPlan, getAllCourses, getAllProgrammes, getCoursesFromStudyPlan, getStudyPlan, Programme, updateStudyPlan, getProgrammeCourses } from "~/api";
 import CourseCard from "~/components/CourseCard";
+
 
 function EditStudyPlan() {
     const { id } = useParams<RouteParams>();
@@ -20,6 +21,10 @@ function EditStudyPlan() {
     const [error, setError] = useState<string | null>(null);
     const [studyPlanName, setStudyPlanName] = useState<string>("");
     const [newCourses, setNewCourses] = useState<Course[]>([]);
+    const location = useLocation();
+    const { courseSelection } = location.state || {};
+    const { programme } = location.state || {};
+    const { planId } = location.state || {};
 
     useEffect(() => {
         const fetchData = async () => {
@@ -57,35 +62,69 @@ function EditStudyPlan() {
     }, []);
 
     useEffect(() => {
-        if (selectedProgramme && courses.length > 0) {
-            const programme = programmes.find(p => p.id === selectedProgramme);
-            if (programme) {
-                const programCourses = courses.filter(course => 
-                    programme.courses.includes(course.id.toString())
-                );
-                setFilteredCourses(programCourses);
+        const fetchProgrammeCourses = async () => {
+            if (selectedProgramme) {
+                try {
+                    const programmeCourses = await getProgrammeCourses(selectedProgramme);
+                    setFilteredCourses(programmeCourses.courses);
+                } catch (error) {
+                    setError("Failed to fetch data. Please try again later.");
+                    // eslint-disable-next-line no-console
+                    console.error("Error fetching data:", error);
+                }
+            } else {
+                setFilteredCourses([]);
             }
-        } else {
-            setFilteredCourses([]);
-        }
+        };
+        fetchProgrammeCourses();
     }, [selectedProgramme, courses, programmes]);
 
     useEffect(() => {
+        if (planId){
+            async function loadStudyPlanInfo() {
+                const res = await getStudyPlan(planId);
+                setStudyPlanName(res ? res.name : "");
+            }
+            loadStudyPlanInfo();
 
-        async function loadStudyPlanInfo() {
-            const res = await getStudyPlan(id);
-            setStudyPlanName(res ? res.name : "");
-            const fetchedCourses = await getCoursesFromStudyPlan(id);
-            setSelectedCourses(fetchedCourses.data);
-            setNewCourses(fetchedCourses.data);
+            if (courseSelection) {
+                const preselectedCourses = courses.filter((course) =>
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    courseSelection.includes(course.id)
+                );
+                setSelectedCourses(preselectedCourses);
+                setNewCourses(preselectedCourses);
+            }
+            if (programme) {
+                setSelectedProgramme(programme);
+            }
         }
+        else{
+            async function loadStudyPlanInfo() {
+                const res = await getStudyPlan(id);
+                setStudyPlanName(res ? res.name : "");
+                const fetchedCourses = await getCoursesFromStudyPlan(id);
+                setSelectedCourses(fetchedCourses.data);
+                setNewCourses(fetchedCourses.data);
+            }
+    
+            loadStudyPlanInfo();
+        }
+    }, [id, courseSelection, programme, courses, planId]);
 
-        loadStudyPlanInfo();
-
-    }, [id]);
 
     const handleProgramTreeClick = () => {
-        window.location.href = "/plantree";
+        if (selectedProgramme) {
+            navigate(`/plantree?programmeId=${selectedProgramme}`, {
+                state: {
+                    courseSelection: newCourses.map(course => course.id),
+                    planId: id,
+                },
+            });
+        }
+        else {
+            alert("Please select a programme first.");
+        }
     };
 
     const handleCourseSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
