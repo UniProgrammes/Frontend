@@ -1,10 +1,11 @@
 import { useState } from "react";
 
+import { Button } from "antd";
+import { FaPencilAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-import CourseViewCard from "./CourseViewCard";
-
 import { Course, ValidCourses } from "~/api";
+import CourseCard from "~/components/CourseCard";
 
 interface StudyPlanViewParams {
   id: string;
@@ -63,53 +64,50 @@ const StudyPlanView: React.FC<StudyPlanViewParams> = ({ id, name, courses, valid
   };
 
   return (
-    <div className="flex flex-row max-w-full">
-      <div id="main-content" className="w-full flex flex-col">
-        <main id="planning-content" className="bg-neutral-300 rounded-3xl max-h-full p-4 m-8">
-          <div className="flex items-center justify-between p-8">
-            <div id="study-info" className="text-2xl flex flex-col space-y-4">
-              <h2 className="font-bold text-4xl">{name}</h2>
-              <p className="">{courses.length} courses selected</p>
-              <p className="">{totalCredits} ECTS credits total</p>
-              {validation.is_valid ? (
-                <p>All courses meet the requirements</p>
-              ) : (
-                <div>
-                  <label htmlFor="valid-details-button" className="text-[#DD0000]">
-                    Not all courses meet the requirements
-                  </label>
-                  <button
-                    id="valid-details-button"
-                    onClick={handleModalOpen}
-                    className="ml-6 text-white bg-purple-500 hover:bg-purple-700 rounded-lg w-auto p-2"
-                  >
-                    See details
-                  </button>
-                </div>
-              )}
-            </div>
-            <div id="action-buttons" className="flex flex-col text-3xl text-white space-y-2">
-              <button
-                onClick={() => navigate(`/edit-study-plan/${id}`)}
-                className="bg-purple-500 hover:bg-purple-700 rounded-lg w-auto p-2"
-              >
-                Edit Plan
-              </button>
-              <button className="bg-purple-500 hover:bg-purple-700 rounded-lg w-auto p-2">View Schedule</button>
-              <button className="bg-purple-500 hover:bg-purple-700 rounded-lg w-auto p-2">View Selected Courses</button>
-            </div>
-          </div>
-          <hr className="border-black m-4" />
-          <div className="flex flex-col gap-y-4">
-            {courses.length > 0 ? (
-              courses.map((course) => <CourseViewCard key={course.id} course={course} />)
+    <div id="main-content" className="flex flex-col w-full">
+      <main id="planning-content" className="bg-neutral-300 rounded-3xl max-h-full p-4 m-8">
+        <div className="flex items-center justify-between p-8">
+          <div id="study-info" className="text-xl flex flex-col space-y-2">
+            <h2 className="font-bold text-3xl">{name}</h2>
+            <p className="">Number of courses selected: {courses.length}</p>
+            <p className="">Total credits added: {totalCredits}</p>
+            {validation.is_valid ? (
+              <p>All courses meet the requirements</p>
             ) : (
-              <p>You don't have any course selected</p>
+              <div>
+                <label htmlFor="valid-details-button" className="text-red-600">
+                  Not all courses meet the requirements
+                </label>
+                <button
+                  id="valid-details-button"
+                  onClick={handleModalOpen}
+                  className="ml-6 text-white bg-purple-500 hover:bg-purple-700 rounded-lg w-auto p-2"
+                >
+                  See details
+                </button>
+              </div>
             )}
           </div>
-        </main>
-        {modalOpen && renderModal()}
-      </div>
+          <div id="action-buttons">
+            <Button
+              color="primary"
+              variant="solid"
+              onClick={() => navigate(`/edit-study-plan/${id}`)}
+              className="text-xl bg-purple-500 hover:!bg-purple-600 w-full"
+              size="large"
+              icon={<FaPencilAlt />}
+            >
+              Edit Plan
+            </Button>
+          </div>
+        </div>
+        <hr className="border-black my-4" />
+        <div className="grid grid-cols-3 gap-4">
+          {courses.length > 0 && courses.map((course) => <CourseCard key={course.id} course={course} />)}
+          {courses.length === 0 && <p className="col-span-3 text-2xl text-center m-36">You don't have any courses selected</p>}
+        </div>
+      </main>
+      {modalOpen && renderModal()}
     </div>
   );
 };

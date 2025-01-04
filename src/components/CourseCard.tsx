@@ -7,7 +7,7 @@ import { Course } from "~/api";
 
 interface CourseCardProps {
   course: Course;
-  onRemove: () => void;
+  onRemove?: () => void;
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({
@@ -33,18 +33,20 @@ const CourseCard: React.FC<CourseCardProps> = ({
           <p>Main Area: {course.main_area}</p>
           <p className="text-sm mt-2 text-neutral-500">{course.description}</p>
       </div>
-      <button
-        onClick={onRemove}
-        className={clsx(
-          "absolute bottom-4 right-4 w-8 h-8",
+      {!!onRemove && (
+        <button
+          onClick={onRemove}
+          className={clsx(
+            "absolute bottom-4 right-4 w-8 h-8",
           "flex items-center justify-center",
           "rounded-full bg-red-100 text-red-600 hover:bg-red-200"
         )}
-        aria-label="Remove course"
-      >
-        <TrashIcon className="w-4 h-4" />
-      </button>
-  </div>
+          aria-label="Remove course"
+        >
+          <TrashIcon className="w-4 h-4" />
+        </button>
+      )}
+    </div>
   );
 };
 
