@@ -63,7 +63,7 @@ function Dashboard() {
 
           <div className="flex-1 overflow-y-auto">
             {studyPlans.length > 0 ? (
-              <div id="study-plan" className="flex flex-col space-y-8 p-4">
+              <div id="study-plan" className="grid grid-cols-2 gap-4">
                 {studyPlans.map((studyPlan) => (
                   <StudyPlanCard
                     key={studyPlan.id}
