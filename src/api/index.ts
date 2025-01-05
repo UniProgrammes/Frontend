@@ -55,8 +55,8 @@ export interface Course {
   main_area: string;
   learning_outcomes: string[];
   prerequisites: string[];
-  year: number;
-  semester: number;
+  year?: number;
+  semester?: number;
 }
 
 export interface StudyPlan {
