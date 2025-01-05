@@ -1,10 +1,11 @@
 import { useState } from "react";
 
 import { Button } from "antd";
-import { FaPencilAlt } from "react-icons/fa";
+import { FaPencilAlt, FaCheckCircle } from "react-icons/fa";
+import { ImCross } from "react-icons/im";
 import { useNavigate } from "react-router-dom";
 
-import { Course, ValidCourses } from "~/api";
+import { Course, StudyPlanStatus, updateStudyPlanStatus, ValidCourses } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
 interface StudyPlanViewParams {
@@ -12,16 +13,22 @@ interface StudyPlanViewParams {
   name: string | undefined;
   courses: Course[];
   validation: ValidCourses;
+  isCompleted: boolean;
 }
 
-const StudyPlanView: React.FC<StudyPlanViewParams> = ({ id, name, courses, validation }) => {
+const StudyPlanView: React.FC<StudyPlanViewParams> = ({ id, name, courses, validation, isCompleted }) => {
   const totalCredits = courses.reduce((acc, current) => parseFloat(current.credits) + acc, 0);
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   const handleModalOpen = () => setModalOpen(true);
   const handleModalClose = () => setModalOpen(false);
-
+  const toogleStatus = () => {
+    if(!id || typeof isCompleted === "undefined") return;
+    const stat: { status: StudyPlanStatus } = {status: isCompleted ? "draft" : "completed"}; 
+    updateStudyPlanStatus(id, stat);
+    window.location.reload();
+  };
   const renderModal = () => {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50 w-auto">
@@ -91,8 +98,8 @@ const StudyPlanView: React.FC<StudyPlanViewParams> = ({ id, name, courses, valid
               </div>
             )}
           </div>
-          <div id="action-buttons">
-            <Button
+          <div id="action-buttons" className="flex flex-col space-y-8">
+            {!isCompleted && <Button
               color="primary"
               variant="solid"
               onClick={() => navigate(`/edit-study-plan/${id}`)}
@@ -101,6 +108,17 @@ const StudyPlanView: React.FC<StudyPlanViewParams> = ({ id, name, courses, valid
               icon={<FaPencilAlt />}
             >
               Edit Plan
+            </Button>}
+            <Button
+              color="primary"
+              variant="solid"
+              onClick={toogleStatus}
+              className="text-xl bg-purple-500 hover:!bg-purple-600 w-full"
+              size="large"
+              icon={!isCompleted ? <FaCheckCircle /> : <ImCross />}
+            >
+              Mark as
+              {!isCompleted ? " Completed" : " Not Completed"}
             </Button>
           </div>
         </div>
