@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { message, Modal } from "antd";
 import { HiUserCircle } from "react-icons/hi";
@@ -10,7 +10,7 @@ import RegisterModalBody from "~/components/RegisterModalBody";
 import useMainStore from "~/stores/mainStore";
 
 function TopBar() {
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(true);
   const [modalType, setModalType] = useState<"login" | "register">("login");
   const { isLoggedIn, user, setIsLoggedIn, setAccessToken, setUser } = useMainStore();
   const navigate = useNavigate();
@@ -29,6 +29,12 @@ function TopBar() {
     setUser(null);
     message.success("Logged out successfully");
   };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      setIsModalOpen(false);
+    }
+  }, [isLoggedIn]);
 
   return (
     <div className="flex items-center justify-between px-8 bg-white py-2 rounded-b-md">
@@ -54,7 +60,7 @@ function TopBar() {
       {isModalOpen && (
         <Modal
           open={isModalOpen}
-          onCancel={() => setIsModalOpen(false)}
+          onCancel={() => null}
           centered
           footer={null}
           maskClosable={false}

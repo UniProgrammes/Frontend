@@ -6,22 +6,10 @@ import { updateMe, UpdateUserPayload } from "~/api/v1/users";
 import useMainStore from "~/stores/mainStore";
 
 function Profile() {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const { user: storeUser, setUser: setStoreUser } = useMainStore();
   const [user, setUser] = useState<UpdateUserPayload & { confirmPassword?: string } | null>(storeUser);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleChange = (key: string, value: string) => {
     if (!user) return;
@@ -72,21 +60,7 @@ function Profile() {
   return (
     <div className="bg-gray-200 rounded-3xl p-8 m-8 flex flex-col items-center">
       <h2 className="text-2xl font-bold mb-4">Change your profile settings</h2>
-      <div className="relative mb-6">
-        <img
-          className="w-52 h-52 rounded-full border-4 border-white object-cover"
-          src={selectedImage || "https://via.placeholder.com/150"}
-          alt="Profile"
-        />
-        <button
-          className="absolute bottom-0 right-11 bg-purple-600 text-white rounded-full p-2"
-          onClick={() => document.getElementById("file-input")?.click()}
-        >
-          Change photo
-        </button>
-        <input type="file" id="file-input" className="hidden" accept="image/*" onChange={handleImageChange} />
-      </div>
-      <div className="w-full max-w-lg grid grid-cols-2 gap-4">
+      <div className="w-full max-w-lg grid grid-cols-2 gap-6 mt-6">
         <div>
           <label className="block text-gray-700 text-sm font-bold" htmlFor="username">
             Username
