@@ -54,7 +54,10 @@ const StudyPlanView: React.FC<StudyPlanViewParams> = ({ id, name, courses, valid
             >
               Close
             </button>
-            <button className="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600 text-2xl" disabled>
+            <button
+              className="px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600 text-2xl" 
+              onClick={() => navigate(`/edit-study-plan/${id}`)}
+            >
               Add courses
             </button>
           </div>
