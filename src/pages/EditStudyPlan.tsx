@@ -15,7 +15,7 @@ import {
   getCoursesFromStudyPlan,
   getStudyPlan,
   Programme,
-  updateStudyPlan
+  updateStudyPlanName
 } from "~/api";
 import CourseCard from "~/components/CourseCard";
 
@@ -107,7 +107,7 @@ function EditStudyPlan() {
   const handleUpdateStudyPlan = () => {
     async function updatePlan() {
       try {
-        const updatedStudyPlan = await updateStudyPlan(id, { name: studyPlanName });
+        const updatedStudyPlan = await updateStudyPlanName(id, { name: studyPlanName });
 
         // Delete previous courses and add the new ones
         if (selectedCourses.length !== 0) {
