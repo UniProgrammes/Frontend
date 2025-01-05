@@ -1,45 +1,45 @@
 import React from "react";
 
+import { TrashIcon } from "@radix-ui/react-icons";
+import clsx from "clsx";
+
+import { Course } from "~/api";
+
 interface CourseCardProps {
-  name: string;
-  credits: string;
-  code: string;
-  educational_level: string;
-  description: string;
-  semester: number;
-  onRemove: () => void;
+  course: Course;
+  onRemove?: () => void;
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ 
-  name, 
-  credits, 
-  code,
-  educational_level,
-  description,
-  semester,
-  onRemove
-}) => {
+const CourseCard: React.FC<CourseCardProps> = ({ course, onRemove }) => {
   return (
-    <div className="bg-white shadow-md rounded-3xl p-4 w-full">
-        <div id="current-plan" className="flex flex-row items-center justify-between px-4 py-2">
-            <h3 className="text-2xl font-bold text-black m-2 mb-4 text-left">{name}</h3>
-            <button className="block text-xl w-1/3 m-4 h-10 p-2 rounded-lg text-white text-center text-bold bg-purple-600">
-                Programme
-            </button>
-        </div>
-        <p className="m-2 pl-4">Semester: {semester}</p>
-        <p className="m-2 pl-4">{credits} ECTS credits</p>
-        <p className="m-2 pl-4">{educational_level}</p>
-        <p className="m-2 pl-4">{description}</p>
-        <div id="current-plan" className="flex flex-row items-center justify-between px-4 py-2">
-            <p className="m-2 pl-4">{code}</p>       
-            <button 
-                onClick={onRemove}
-                className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center text-lg font-bold hover:bg-red-700"
-            >
-                🗑️
-            </button> 
-        </div>
+    <div className="bg-white rounded-lg p-4 shadow-md relative">
+      <div className="absolute top-4 right-4 flex items-center justify-center gap-2">
+        {course.year && <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">Year: {course.year}</div>}
+        {course.semester && <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">Semester: {course.semester}</div>}
+        <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">Course</div>
+      </div>
+
+      <h2 className="text-xl font-semibold text-blue-700 pr-24">{course.name}</h2>
+      <div className="mt-2 text-neutral-600 grid grid-cols-2">
+        <p>Code: {course.code}</p>
+        <p>Credits: {course.credits}</p>
+        <p>Level: {course.educational_level}</p>
+        <p>Main Area: {course.main_area}</p>
+        <p className="text-sm mt-2 text-neutral-500">{course.description}</p>
+      </div>
+      {!!onRemove && (
+        <button
+          onClick={onRemove}
+          className={clsx(
+            "absolute bottom-4 right-4 w-8 h-8",
+            "flex items-center justify-center",
+            "rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+          )}
+          aria-label="Remove course"
+        >
+          <TrashIcon className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 };
