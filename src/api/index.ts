@@ -57,6 +57,7 @@ export interface Course {
   prerequisites: string[];
   year: number;
   semester: number;
+  period: number;
 }
 
 export interface StudyPlanCourse extends Course {
@@ -82,7 +83,6 @@ export interface StudyPlanGetResponse {
 
 export interface CourseListPost {
     id: string;
-    semester: number;
 }
 
 export interface ValidRequisitesResponse {
