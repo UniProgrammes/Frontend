@@ -148,7 +148,7 @@ function Profile() {
           <label className="block text-gray-700 text-sm font-bold" htmlFor="repeat-password">
             Repeat Password
           </label>
-          <Input.Password id="repeat-password" placeholder="Repeat Password" className="h-10" />
+          <Input.Password id="repeat-password" placeholder="Repeat Password" className="h-10" onChange={(e) => handleChange("confirmPassword", e.target.value)} />
         </div>
         <div className="flex justify-center mt-4 col-span-2">
           <Button
