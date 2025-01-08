@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 
-import { notification, Select } from "antd";
+import { notification, Select, Tooltip } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { getAllProgrammes, getAllCourses, saveStudyPlan, addCoursesToStudyPlan, Course, getAllStudyPlans } from "~/api";
 import CourseCard from "~/components/CourseCard";
 import { checkName } from "~/lib/utils";
+import useMainStore from "~/stores/mainStore";
 
 interface Programme {
   id: string;
@@ -32,6 +33,7 @@ function CreatePlan() {
   const location = useLocation();
   const { courseSelection } = location.state || {};
   const { programme } = location.state || {};
+  const { isLoggedIn } = useMainStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -226,13 +228,18 @@ function CreatePlan() {
           <>
             <div id="header" className="flex items-center justify-between h-16 p-2">
               <h1 className="text-2xl font-bold">Create your study plan</h1>
-              <button
-                className="text-lg py-2 px-6 rounded-md text-white font-bold bg-purple-600 disabled:opacity-50"
-                disabled={selectedCourses.length === 0}
-                onClick={handleSaveClick}
+              <Tooltip
+                title={!isLoggedIn ? "Please login to access this feature" : ""}
+                placement="top"
               >
-                Save Plan
-              </button>
+                <button
+                  className="text-lg py-2 px-6 rounded-md text-white font-bold bg-purple-600 disabled:opacity-50"
+                  disabled={selectedCourses.length === 0 || !isLoggedIn}
+                  onClick={handleSaveClick}
+                >
+                  Save Plan
+                </button>
+              </Tooltip>
             </div>
 
             <div className="flex flex-row shadow-lg rounded-lg bg-white my-6">
