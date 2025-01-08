@@ -83,7 +83,12 @@ function ViewStudyPlan() {
   return (
     <div>
       {refId.current.length !== 0 && studyPlan && (
-          <StudyPlanView id={id} name={studyPlan.name} courses={courses} validation={newValid} />
+          <StudyPlanView
+            id={id}
+            name={studyPlan.name}
+            courses={courses}
+            validation={newValid}
+            isCompleted={studyPlan.status === "completed"}/>
         )}
       {!studyPlan && !loading && <p className="text-2xl text-red-600 text-center m-36">The study plan doesn't exist</p>}
       {loading && (

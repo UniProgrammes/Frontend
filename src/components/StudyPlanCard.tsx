@@ -45,7 +45,8 @@ const StudyPlanCard: React.FC<StudyPlanCardProps> = ({
           variant="solid"
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/edit-study-plan/${id}`);
+            if(completed) navigate(`/study-plan/${id}`);
+            else navigate(`/edit-study-plan/${id}`);
           }}
           icon={completed ? <FaEye /> : <FaPencilAlt />}
           className="text-base bg-purple-400 hover:!bg-purple-600 w-full"

@@ -48,9 +48,9 @@ interface Course {
 
 const pastelColors = [
     "rgba(102, 153, 255, 1)", // Light Blue
-    "rgba(102, 255, 204, 1)", // Aqua Green
-    "rgba(102, 255, 153, 1)", // Soft Mint
-    "rgba(102, 255, 102, 1)", // Light Green
+    "rgba(81, 189, 163, 1)", // Aqua Green
+    "rgba(82, 204, 123, 1)", // Soft Mint
+    "rgba(82, 204, 82, 1)", // Light Green
     "rgba(255, 255, 102, 1)", // Pale Yellow
     "rgba(255, 204, 102, 1)", // Peach
     "rgba(255, 102, 102, 1)", // Soft Coral
@@ -424,7 +424,7 @@ function App() {
                         ...node,
                         style: {
                             backgroundColor: hasMissingPrerequisites
-                                ? "red"
+                                ? "#CC4444"
                                 : yearColor, // Use the color for the year
                             color: hasMissingPrerequisites ? "white" : "#000",
                         },

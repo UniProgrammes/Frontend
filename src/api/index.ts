@@ -57,14 +57,17 @@ export interface Course {
   prerequisites: string[];
   year: number;
   semester: number;
+  period: number;
 }
+
+export type StudyPlanStatus = "draft" | "completed";
 
 export interface StudyPlan {
   id: string;
   created_at: string;
   updated_at: string;
   name: string;
-  status: string;
+  status: StudyPlanStatus;
   user: number;
   courses: string[];
 }
@@ -78,7 +81,6 @@ export interface StudyPlanGetResponse {
 
 export interface CourseListPost {
     id: string;
-    semester: number;
 }
 
 export interface ValidRequisitesResponse {
@@ -163,10 +165,15 @@ export const addCoursesToStudyPlan = async (studyPlanId: string, courses: {cours
   return response.data;
 }
 
-export const updateStudyPlan = async (studyPlanId: string, studyPlanName: {name: string}) => {
+export const updateStudyPlanName = async (studyPlanId: string, studyPlanName: {name: string}) => {
   const response = await client.patch<StudyPlan>(`/v1/study-plans/${studyPlanId}/`, studyPlanName);
   return response.data;
 };
+
+export const updateStudyPlanStatus = async (studyPlanId: string, studyPlanStatus: {status: StudyPlanStatus}) => {
+  const response = await client.patch<StudyPlan>(`/v1/study-plans/${studyPlanId}/`, studyPlanStatus);
+  return response.data;
+}
 
 export const deleteCoursesFromStudyPlan = async (studyPlan: StudyPlan, courses: {courses_ids: string[]}) => {
   const response = await client.delete<void>(`/v1/study-plans/${studyPlan.id}/courses/`, {data: courses});
