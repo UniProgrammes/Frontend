@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Select } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation  } from "react-router-dom";
 import { useParams } from "wouter";
 
 import { RouteParams } from "./ViewStudyPlan";
@@ -32,6 +32,10 @@ function EditStudyPlan() {
   const [error, setError] = useState<string | null>(null);
   const [studyPlanName, setStudyPlanName] = useState<string>("");
   const [newCourses, setNewCourses] = useState<Course[]>([]);
+  const location = useLocation();
+  const { courseSelection } = location.state || {};
+  const { programme } = location.state || {};
+  const { planId } = location.state || {};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,19 +82,50 @@ function EditStudyPlan() {
   }, [selectedProgramme, courses, programmes]);
 
   useEffect(() => {
-    async function loadStudyPlanInfo() {
-      const res = await getStudyPlan(id);
-      setStudyPlanName(res ? res.name : "");
-      const fetchedCourses = await getCoursesFromStudyPlan(id);
-      setSelectedCourses(fetchedCourses.data);
-      setNewCourses(fetchedCourses.data);
-    }
+    if (planId){
+        async function loadStudyPlanInfo() {
+            const res = await getStudyPlan(planId);
+            setStudyPlanName(res ? res.name : "");
+        }
+        loadStudyPlanInfo();
 
-    loadStudyPlanInfo();
-  }, [id]);
+        if (courseSelection) {
+            const preselectedCourses = courses.filter((course) =>
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                courseSelection.includes(course.id)
+            );
+            setSelectedCourses(preselectedCourses);
+            setNewCourses(preselectedCourses);
+        }
+        if (programme) {
+            setSelectedProgramme(programme);
+        }
+    }
+    else{
+        async function loadStudyPlanInfo() {
+            const res = await getStudyPlan(id);
+            setStudyPlanName(res ? res.name : "");
+            const fetchedCourses = await getCoursesFromStudyPlan(id);
+            setSelectedCourses(fetchedCourses.data);
+            setNewCourses(fetchedCourses.data);
+        }
+
+        loadStudyPlanInfo();
+    }
+  }, [id, courseSelection, programme, courses, planId]);
 
   const handleProgramTreeClick = () => {
-    window.location.href = "/plantree";
+    if (selectedProgramme) {
+        navigate(`/plantree?programmeId=${selectedProgramme}`, {
+            state: {
+                courseSelection: selectedCourses.map(course => course.id),
+                planId: id,
+            },
+        });
+    }
+    else {
+        alert("Please select a programme first.");
+    }
   };
 
   const handleCourseSelect = (courseIds: string[]) => {
