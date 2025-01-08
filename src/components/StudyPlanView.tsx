@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Button } from "antd";
+import { Button, Popover } from "antd";
 import { FaPencilAlt, FaCheckCircle } from "react-icons/fa";
 import { ImCross } from "react-icons/im";
 import { useNavigate } from "react-router-dom";
@@ -109,17 +109,37 @@ const StudyPlanView: React.FC<StudyPlanViewParams> = ({ id, name, courses, valid
             >
               Edit Plan
             </Button>}
-            <Button
-              color="primary"
-              variant="solid"
-              onClick={toogleStatus}
-              className="text-xl bg-purple-500 hover:!bg-purple-600 w-full"
-              size="large"
-              icon={!isCompleted ? <FaCheckCircle /> : <ImCross />}
-            >
-              Mark as
-              {!isCompleted ? " Completed" : " Not Completed"}
-            </Button>
+            {
+              isCompleted ?
+              <Button
+                color="primary"
+                variant="solid"
+                onClick={toogleStatus}
+                className="text-xl bg-purple-500 hover:!bg-purple-600 w-full"
+                size="large"
+                icon={<ImCross />}
+              >
+                Mark as Not Completed
+              </Button>
+              : 
+              <Popover
+                placement="bottom"
+                title={!validation.is_valid
+                        ? "Cannot complete the study plan if it doesn't meet the requirements"
+                        : "You can complete the study plan"}>
+                <Button
+                  disabled={!validation.is_valid}
+                  color="primary"
+                  variant="solid"
+                  onClick={toogleStatus}
+                  className="text-xl bg-purple-500 hover:!bg-purple-600 w-full"
+                  size="large"
+                  icon={<FaCheckCircle />}
+                >
+                  Mark as Completed
+                </Button>
+              </Popover>
+            }
           </div>
         </div>
         <hr className="border-black my-4" />
