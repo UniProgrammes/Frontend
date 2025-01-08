@@ -33,6 +33,8 @@ function TopBar() {
   useEffect(() => {
     if (isLoggedIn) {
       setIsModalOpen(false);
+    } else {
+      setIsModalOpen(true);
     }
   }, [isLoggedIn]);
 
@@ -60,7 +62,7 @@ function TopBar() {
       {isModalOpen && (
         <Modal
           open={isModalOpen}
-          onCancel={() => null}
+          closeIcon={null}
           centered
           footer={null}
           maskClosable={false}
@@ -72,6 +74,12 @@ function TopBar() {
             <LoginModalBody setModalType={setModalType} close={() => setIsModalOpen(false)} />
           )}
           {modalType === "register" && <RegisterModalBody setModalType={setModalType} />}
+          <p className="text-center text-blue-500 cursor-pointer" onClick={() => {
+            navigate("/view-programme");
+            setIsModalOpen(false);
+          }}>
+            Or continue as guest
+          </p>
         </Modal>
       )}
     </div>

@@ -6,7 +6,6 @@ import EditStudyPlan from "~/pages/EditStudyPlan";
 import Help from "~/pages/Help";
 import Home from "~/pages/Home";
 import PlanTree from "~/pages/PlanTree";
-//import TestBackendConnection from "~/pages/TestBackendConnection";
 import Profile from "~/pages/Profile";
 import ViewProgramme from "~/pages/ViewProgramme";
 import ViewStudyPlan from "~/pages/ViewStudyPlan";
@@ -32,16 +31,19 @@ const routes: RouterItem[] = [
     title: "Dasboard",
     path: "/dashboard",
     component: <Dashboard />,
+    isPrivate: true,
   },
   {
     title: "View Study Plan",
     path: "/study-plan/:id",
     component: <ViewStudyPlan />,
+    isPrivate: true,
   },
   {
     title: "Edit Study Plan",
     path: "/edit-study-plan/:id",
     component: <EditStudyPlan />,
+    isPrivate: true,
   },
   {
     title: "Profile",
