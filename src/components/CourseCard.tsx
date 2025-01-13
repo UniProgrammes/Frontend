@@ -20,7 +20,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onRemove }) => {
         <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">Course</div>
       </div>
 
-      <h2 className="text-xl font-semibold text-blue-700 pr-24">{course.name}</h2>
+      <h2 className="text-xl font-semibold text-blue-700 pr-24 pt-10">{course.name}</h2>
       <div className="mt-2 text-neutral-600 grid grid-cols-2">
         <p>Code: {course.code}</p>
         <p>Credits: {course.credits}</p>

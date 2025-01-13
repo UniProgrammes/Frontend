@@ -182,7 +182,7 @@ function EditStudyPlan() {
   };
 
   return (
-    <div className="flex flex-row max-h-full max-w-full">
+    <div className="flex flex-row min-h-screen max-w-full">
       <div id="main-content" className="w-full flex flex-col bg-neutral-300 rounded-xl py-4 px-8 m-8">
           {loading ? (
             <div className="flex justify-center items-center h-64">
