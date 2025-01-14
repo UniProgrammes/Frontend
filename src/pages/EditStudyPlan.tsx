@@ -31,7 +31,6 @@ function EditStudyPlan() {
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [studyPlanName, setStudyPlanName] = useState<string>("");
-  const [newCourses, setNewCourses] = useState<Course[]>([]);
   const location = useLocation();
   const { courseSelection } = location.state || {};
   const { programme } = location.state || {};
@@ -95,7 +94,6 @@ function EditStudyPlan() {
                 courseSelection.includes(course.id)
             );
             setSelectedCourses(preselectedCourses);
-            setNewCourses(preselectedCourses);
         }
         if (programme) {
             setSelectedProgramme(programme);
@@ -107,7 +105,6 @@ function EditStudyPlan() {
             setStudyPlanName(res ? res.name : "");
             const fetchedCourses = await getCoursesFromStudyPlan(id);
             setSelectedCourses(fetchedCourses.data);
-            setNewCourses(fetchedCourses.data);
         }
 
         loadStudyPlanInfo();
@@ -136,7 +133,7 @@ function EditStudyPlan() {
   };
 
   const handleRemoveCourse = (courseId: string) => {
-    setNewCourses((prevCourses) => prevCourses.filter((course) => course.id !== courseId));
+    // setNewCourses((prevCourses) => prevCourses.filter((course) => course.id !== courseId));
   };
 
   const handleUpdateStudyPlan = () => {
