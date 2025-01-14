@@ -151,7 +151,7 @@ function EditStudyPlan() {
           deleteCoursesFromStudyPlan(updatedStudyPlan, bodyRequst);
         }
 
-        const addCourses = newCourses.map((course) => {
+        const addCourses = selectedCourses.map((course) => {
           return {
             id: course.id,
             semester: course.semester
