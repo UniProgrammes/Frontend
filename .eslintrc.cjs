@@ -43,12 +43,13 @@ const config = {
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
-        argsIgnorePattern: "^_"
+        argsIgnorePattern: "^_",
+        caughtErrorsIgnorePattern: "^_",
+        varsIgnorePattern: "^_"
       }
     ],
     "@typescript-eslint/ban-ts-comment": 2,
     "@typescript-eslint/ban-tslint-comment": 2,
-    "@typescript-eslint/ban-types": 2,
     "@typescript-eslint/class-literal-property-style": 2,
     "@typescript-eslint/consistent-indexed-object-style": 2,
     "@typescript-eslint/no-misused-new": 2,
